@@ -1671,6 +1671,142 @@ function Window:CreateTab(name, icon)
             return self:CreateLabel(title, text)
         end
 
+
+        function section:CreateImage(labelText, imageSource, options)
+            options = options or {}
+            local component = baseElement("Image", labelText or "Image", nil, imageSource, options.Description)
+            component.Frame.Size = UDim2.new(1, 0, 0, (options.Description and options.Description ~= "") and 164 or 148)
+
+            local image = Utility.Create("ImageLabel", {
+                BackgroundColor3 = theme:Get("Surface"),
+                BorderSizePixel = 0,
+                Position = UDim2.fromOffset(0, component.DescriptionLabel.TextTransparency == 0 and 34 or 18),
+                Size = UDim2.new(1, 0, 0, options.Height or 112),
+                Image = imageSource or "",
+                ScaleType = Enum.ScaleType.Crop,
+                Parent = component.Frame,
+                CornerRadius = UDim.new(0, 8),
+                Stroke = {
+                    Color = theme:Get("Border"),
+                    Transparency = 0.22,
+                    Thickness = 1,
+                },
+            })
+
+            function component:Set(value)
+                component.Value = value
+                image.Image = value or ""
+            end
+
+            function component:GetSerialized()
+                return {Value = self.Value}
+            end
+
+            return registerComponent(component)
+        end
+
+        function section:CreateBanner(labelText, imageSource, options)
+            options = options or {}
+            local component = baseElement("Banner", labelText or "Banner", nil, imageSource, options.Description)
+            component.Frame.Size = UDim2.new(1, 0, 0, 176)
+
+            local card = Utility.Create("Frame", {
+                BackgroundColor3 = theme:Get("Surface"),
+                BorderSizePixel = 0,
+                Position = UDim2.fromOffset(0, 26),
+                Size = UDim2.new(1, 0, 0, 140),
+                Parent = component.Frame,
+                CornerRadius = UDim.new(0, 8),
+                Stroke = {
+                    Color = theme:Get("Border"),
+                    Transparency = 0.22,
+                    Thickness = 1,
+                },
+            })
+
+            local bannerImage = Utility.Create("ImageLabel", {
+                BackgroundColor3 = theme:Get("SurfaceAlt"),
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, 0, 0, 78),
+                Image = imageSource or "",
+                ScaleType = Enum.ScaleType.Crop,
+                Parent = card,
+                CornerRadius = UDim.new(0, 8),
+            })
+
+            Utility.Create("Frame", {
+                BackgroundColor3 = theme:Get("Surface"),
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 0, 1, -8),
+                Size = UDim2.new(1, 0, 0, 8),
+                Parent = bannerImage,
+            })
+
+            local title = Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Font = Enum.Font.GothamBold,
+                Position = UDim2.fromOffset(12, 86),
+                Size = UDim2.new(1, -124, 0, 16),
+                Text = options.Title or labelText or "Banner",
+                TextColor3 = theme:Get("Text"),
+                TextSize = 11,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = card,
+            })
+
+            local description = Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Font = Enum.Font.Gotham,
+                Position = UDim2.fromOffset(12, 102),
+                Size = UDim2.new(1, -124, 0, 26),
+                Text = options.Description or "",
+                TextColor3 = theme:Get("TextMuted"),
+                TextSize = 10,
+                TextWrapped = true,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Parent = card,
+            })
+
+            local action = Utility.Create("TextButton", {
+                AutoButtonColor = false,
+                BackgroundColor3 = options.ButtonColor or theme:Get("AccentDark"),
+                BorderSizePixel = 0,
+                AnchorPoint = Vector2.new(1, 1),
+                Position = UDim2.new(1, -12, 1, -12),
+                Size = UDim2.fromOffset(100, 28),
+                Text = options.ButtonText or "Open",
+                Font = Enum.Font.GothamBold,
+                TextColor3 = theme:Get("Text"),
+                TextSize = 10,
+                Parent = card,
+                CornerRadius = UDim.new(0, 6),
+            })
+            Utility.Ripple(action, theme)
+
+            if type(options.Callback) == "function" then
+                action.MouseButton1Click:Connect(function()
+                    options.Callback()
+                end)
+            end
+
+            function component:Set(value)
+                component.Value = value
+                bannerImage.Image = value or ""
+            end
+
+            function component:GetSerialized()
+                return {Value = self.Value}
+            end
+
+            component.Card = card
+            component.Image = bannerImage
+            component.Title = title
+            component.Description = description
+            component.Button = action
+
+            return registerComponent(component)
+        end
         function section:CreateButton(labelText, callback, tooltip)
             local component = baseElement("Button", labelText, callback, false, tooltip)
             local button = Utility.Create("TextButton", {
@@ -2351,6 +2487,14 @@ function Window:CreateTab(name, icon)
             return self:CreateColorPicker(...)
         end
 
+
+        function section:Image(...)
+            return self:CreateImage(...)
+        end
+
+        function section:Banner(...)
+            return self:CreateBanner(...)
+        end
         table.insert(self.Sections, section)
         return section
     end
@@ -2404,6 +2548,14 @@ function Window:CreateTab(name, icon)
         return self:_ensureSection():Keybind(labelText or "Keybind", defaultKey or Enum.KeyCode.E, callback)
     end
 
+
+    function tab:Image(labelText, imageSource, options)
+        return self:_ensureSection():Image(labelText or "Image", imageSource or "", options or {})
+    end
+
+    function tab:Banner(labelText, imageSource, options)
+        return self:_ensureSection():Banner(labelText or "Banner", imageSource or "", options or {})
+    end
     function tab:ColorPicker(labelText, defaultColor, callback)
         return self:_ensureSection():ColorPicker(labelText or "Color Picker", defaultColor or theme:Get("Accent"), callback)
     end
