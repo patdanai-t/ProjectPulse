@@ -103,15 +103,15 @@ local Theme = {}
 Theme.__index = Theme
 
 local DEFAULT = {
-    Background = Color3.fromRGB(11, 12, 16),
-    Surface = Color3.fromRGB(18, 20, 27),
-    SurfaceAlt = Color3.fromRGB(23, 26, 35),
-    Sidebar = Color3.fromRGB(14, 15, 20),
-    Border = Color3.fromRGB(46, 49, 60),
-    Text = Color3.fromRGB(240, 242, 247),
-    TextMuted = Color3.fromRGB(148, 153, 168),
-    Accent = Color3.fromRGB(255, 56, 121),
-    AccentDark = Color3.fromRGB(168, 24, 81),
+    Background = Color3.fromRGB(29, 29, 31),
+    Surface = Color3.fromRGB(35, 35, 37),
+    SurfaceAlt = Color3.fromRGB(42, 42, 45),
+    Sidebar = Color3.fromRGB(32, 32, 34),
+    Border = Color3.fromRGB(58, 58, 61),
+    Text = Color3.fromRGB(235, 235, 236),
+    TextMuted = Color3.fromRGB(156, 156, 160),
+    Accent = Color3.fromRGB(255, 32, 93),
+    AccentDark = Color3.fromRGB(185, 24, 72),
     Success = Color3.fromRGB(80, 220, 160),
     Warning = Color3.fromRGB(255, 191, 89),
     Danger = Color3.fromRGB(255, 94, 94),
@@ -393,7 +393,7 @@ function Utility.Tooltip(target, text, theme)
         Size = UDim2.fromOffset(0, 0),
         Text = "  " .. text .. "  ",
         TextColor3 = theme:Get("Text"),
-        TextSize = 12,
+        TextSize = 10,
         TextTransparency = 1,
         Visible = false,
         ZIndex = 200,
@@ -622,7 +622,7 @@ function Notifications:Notify(options)
         Size = UDim2.fromOffset(320, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = self.Container,
-        CornerRadius = UDim.new(0, 12),
+        CornerRadius = UDim.new(0, 4),
         Stroke = {
             ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
             Color = theme:Get("Border"),
@@ -630,10 +630,10 @@ function Notifications:Notify(options)
             Thickness = 1,
         },
         Padding = {
-            PaddingBottom = UDim.new(0, 12),
+            PaddingBottom = UDim.new(0, 6),
             PaddingLeft = UDim.new(0, 14),
             PaddingRight = UDim.new(0, 14),
-            PaddingTop = UDim.new(0, 12),
+            PaddingTop = UDim.new(0, 6),
         },
     })
 
@@ -646,7 +646,7 @@ function Notifications:Notify(options)
         Font = Enum.Font.GothamBold,
         Text = options.Title or "ProjectPulse",
         TextColor3 = theme:Get("Text"),
-        TextSize = 13,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = card,
     })
@@ -658,7 +658,7 @@ function Notifications:Notify(options)
         Font = Enum.Font.Gotham,
         Text = options.Content or "Notification",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 12,
+        TextSize = 10,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = card,
@@ -781,9 +781,9 @@ function Window.new(library, title, options)
         ReopenWithoutBlur = false,
     }
 
-    self.DefaultSize = UDim2.fromOffset(980, 640)
-    self.MinimizedSize = UDim2.fromOffset(980, 86)
-    self.MaximizedSize = UDim2.fromScale(0.92, 0.9)
+    self.DefaultSize = UDim2.fromOffset(900, 560)
+    self.MinimizedSize = UDim2.fromOffset(900, 54)
+    self.MaximizedSize = UDim2.fromScale(0.84, 0.8)
 
     self:_build()
 
@@ -813,7 +813,7 @@ function Window:_build()
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
         Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromOffset(980, 640),
+        Size = self.DefaultSize,
         Parent = self.Library.ScreenGui,
     })
 
@@ -822,7 +822,7 @@ function Window:_build()
         BorderSizePixel = 0,
         Size = UDim2.fromScale(1, 1),
         Parent = self.Root,
-        CornerRadius = UDim.new(0, 18),
+        CornerRadius = UDim.new(0, 14),
         Stroke = {
             ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
             Color = theme:Get("Border"),
@@ -837,25 +837,25 @@ function Window:_build()
             Rotation = 90,
         },
     })
-    Utility.Shadow(self.Main, 0.76)
+    Utility.Shadow(self.Main, 0.82)
 
     self.Topbar = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("SurfaceAlt"),
         BackgroundTransparency = 0.16,
-        Position = UDim2.fromOffset(14, 14),
+        Position = UDim2.fromOffset(16, 12),
         Size = UDim2.new(1, -28, 0, 58),
         Parent = self.Main,
         CornerRadius = UDim.new(0, 14),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.28,
+            Transparency = 0.6,
             Thickness = 1,
         },
         Padding = {
-            PaddingLeft = UDim.new(0, 18),
-            PaddingRight = UDim.new(0, 18),
-            PaddingTop = UDim.new(0, 12),
-            PaddingBottom = UDim.new(0, 12),
+            PaddingLeft = UDim.new(0, 14),
+            PaddingRight = UDim.new(0, 14),
+            PaddingTop = UDim.new(0, 6),
+            PaddingBottom = UDim.new(0, 6),
         },
     })
 
@@ -865,7 +865,7 @@ function Window:_build()
         Position = UDim2.fromOffset(14, 86),
         Size = UDim2.new(0, 214, 1, -100),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 18),
+        CornerRadius = UDim.new(0, 14),
         Stroke = {
             Color = theme:Get("Border"),
             Transparency = 0.16,
@@ -879,7 +879,7 @@ function Window:_build()
         Position = UDim2.new(0, 242, 0, 86),
         Size = UDim2.new(1, -256, 1, -100),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 18),
+        CornerRadius = UDim.new(0, 14),
         Stroke = {
             Color = theme:Get("Border"),
             Transparency = 0.16,
@@ -889,7 +889,7 @@ function Window:_build()
 
     local titleGroup = Utility.Create("Frame", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -94, 1, 0),
+        Size = UDim2.new(1, -160, 1, 0),
         Parent = self.Topbar,
     })
 
@@ -900,7 +900,7 @@ function Window:_build()
         Size = UDim2.new(1, 0, 0, 24),
         Text = self.Title,
         TextColor3 = theme:Get("Text"),
-        TextSize = 20,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
@@ -910,9 +910,9 @@ function Window:_build()
         Font = Enum.Font.Gotham,
         Position = UDim2.fromOffset(0, 22),
         Size = UDim2.new(1, 0, 0, 16),
-        Text = "Premium Roblox interface toolkit",
+        Text = "Made by ProjectPulse Hub",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 12,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
@@ -924,7 +924,7 @@ function Window:_build()
         Size = UDim2.fromOffset(64, 18),
         Parent = self.Topbar,
     })
-    local controlsLayout = Utility.NewListLayout(controls, 9)
+    local controlsLayout = Utility.NewListLayout(controls, 6)
     controlsLayout.FillDirection = Enum.FillDirection.Horizontal
     controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
@@ -940,13 +940,13 @@ function Window:_build()
         Font = Enum.Font.Gotham,
         PlaceholderColor3 = theme:Get("TextMuted"),
         PlaceholderText = "Search controls...",
-        Position = UDim2.fromOffset(14, 14),
+        Position = UDim2.fromOffset(16, 12),
         Size = UDim2.new(1, -28, 0, 38),
         Text = "",
         TextColor3 = theme:Get("Text"),
-        TextSize = 13,
+        TextSize = 11,
         Parent = self.Sidebar,
-        CornerRadius = UDim.new(0, 10),
+        CornerRadius = UDim.new(0, 8),
         Stroke = {
             Color = theme:Get("Border"),
             Transparency = 0.2,
@@ -999,7 +999,7 @@ function Window:_build()
         Size = UDim2.new(1, -18, 0, 16),
         Text = "RightShift",
         TextColor3 = theme:Get("Text"),
-        TextSize = 12,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.SidebarFooter,
     })
@@ -1257,13 +1257,13 @@ function Window:CreateTab(name, icon)
         AutoButtonColor = false,
         BackgroundColor3 = theme:Get("SurfaceAlt"),
         BorderSizePixel = 0,
-        Size = UDim2.new(1, -2, 0, 42),
+        Size = UDim2.new(1, 0, 0, 28),
         Text = "",
         Parent = self.TabButtonHolder,
-        CornerRadius = UDim.new(0, 12),
+        CornerRadius = UDim.new(0, 4),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.35,
+            Transparency = 1,
             Thickness = 1,
         },
     })
@@ -1275,7 +1275,7 @@ function Window:CreateTab(name, icon)
         Size = UDim2.fromOffset(20, 42),
         Text = tab.Icon,
         TextColor3 = theme:Get("Accent"),
-        TextSize = 15,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = tab.SidebarButton,
     })
@@ -1287,7 +1287,7 @@ function Window:CreateTab(name, icon)
         Size = UDim2.new(1, -36, 1, 0),
         Text = name,
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 13,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = tab.SidebarButton,
     })
@@ -1302,7 +1302,7 @@ function Window:CreateTab(name, icon)
         ScrollBarImageColor3 = theme:Get("Accent"),
         ScrollBarThickness = 4,
         Size = UDim2.new(1, -28, 1, -28),
-        Position = UDim2.fromOffset(14, 14),
+        Position = UDim2.fromOffset(16, 12),
         Visible = false,
         Parent = self.ContentPages,
     })
@@ -1344,7 +1344,7 @@ function Window:CreateTab(name, icon)
         self.IconLabel.TextColor3 = theme:Get("Text")
         self.NameLabel.TextColor3 = theme:Get("Text")
         Utility.FastTween(self.Page, {
-            Position = UDim2.fromOffset(14, 14),
+            Position = UDim2.fromOffset(16, 12),
             ScrollBarImageTransparency = 0,
         }, 0.16, Enum.EasingStyle.Quad)
     end
@@ -1362,17 +1362,17 @@ function Window:CreateTab(name, icon)
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 0, 0),
             Parent = self.Page,
-            CornerRadius = UDim.new(0, 14),
+            CornerRadius = UDim.new(0, 0),
             Stroke = {
                 Color = theme:Get("Border"),
-                Transparency = 0.18,
+                Transparency = 1,
                 Thickness = 1,
             },
             Padding = {
-                PaddingBottom = UDim.new(0, 14),
-                PaddingLeft = UDim.new(0, 14),
-                PaddingRight = UDim.new(0, 14),
-                PaddingTop = UDim.new(0, 14),
+                PaddingBottom = UDim.new(0, 8),
+                PaddingLeft = UDim.new(0, 18),
+                PaddingRight = UDim.new(0, 18),
+                PaddingTop = UDim.new(0, 8),
             },
         })
 
@@ -1382,7 +1382,7 @@ function Window:CreateTab(name, icon)
             Size = UDim2.new(1, 0, 0, 18),
             Text = sectionName,
             TextColor3 = theme:Get("Text"),
-            TextSize = 14,
+            TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = section.Frame,
         })
@@ -1410,7 +1410,7 @@ function Window:CreateTab(name, icon)
             local id = string.format("%s_%s_%s", self.Name, sectionName, labelText):gsub("%W", "_")
             local holder = Utility.Create("Frame", {
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 48),
+                Size = UDim2.new(1, 0, 0, 36),
                 Parent = section.Frame,
             })
 
@@ -1421,7 +1421,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(0.6, 0, 0, 16),
                 Text = labelText,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 13,
+                TextSize = 11,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = holder,
             })
@@ -1440,7 +1440,7 @@ function Window:CreateTab(name, icon)
 
         function section:CreateLabel(title, text)
             local component = baseElement("Label", title, nil, text)
-            component.Frame.Size = UDim2.new(1, 0, 0, 62)
+            component.Frame.Size = UDim2.new(1, 0, 0, 46)
             component.Label.Size = UDim2.new(1, 0, 0, 16)
 
             Utility.Create("TextLabel", {
@@ -1450,7 +1450,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(1, 0, 0, 34),
                 Text = text,
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 12,
+                TextSize = 10,
                 TextWrapped = true,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Top,
@@ -1476,12 +1476,12 @@ function Window:CreateTab(name, icon)
                 BorderSizePixel = 0,
                 Position = UDim2.new(1, -150, 0, 0),
                 Size = UDim2.fromOffset(150, 38),
-                Text = "Execute",
+                Text = labelText,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 13,
+                TextSize = 11,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 10),
+                CornerRadius = UDim.new(0, 8),
             })
             Utility.Ripple(button, theme)
 
@@ -1526,7 +1526,7 @@ function Window:CreateTab(name, icon)
             local function apply(state, silent)
                 component.Value = state
                 Utility.FastTween(pill, {BackgroundColor3 = state and theme:Get("Accent") or theme:Get("Border")}, 0.18)
-                Utility.FastTween(knob, {Position = state and UDim2.fromOffset(34, 3) or UDim2.fromOffset(3, 3)}, 0.18)
+                Utility.FastTween(knob, {Position = state and UDim2.fromOffset(18, 2) or UDim2.fromOffset(2, 2)}, 0.18)
                 if callback and not silent then
                     callback(state)
                 end
@@ -1553,7 +1553,7 @@ function Window:CreateTab(name, icon)
             local min = options.Min or 0
             local max = options.Max or 100
             local component = baseElement("Slider", labelText, callback, options.Default or min)
-            component.Frame.Size = UDim2.new(1, 0, 0, 60)
+            component.Frame.Size = UDim2.new(1, 0, 0, 44)
 
             local valueLabel = Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
@@ -1562,8 +1562,8 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(64, 16),
                 Text = Utility.FormatValue(component.Value),
                 TextColor3 = theme:Get("Accent"),
-                TextSize = 12,
-                TextXAlignment = Enum.TextXAlignment.Right,
+                TextSize = 10,
+                TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = component.Frame,
             })
 
@@ -1641,7 +1641,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(220, 38),
                 Text = "",
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 10),
+                CornerRadius = UDim.new(0, 8),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -1655,7 +1655,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(1, -36, 1, 0),
                 Text = multi and "Select..." or tostring(component.Value),
                 TextColor3 = theme:Get("Text"),
-                TextSize = 12,
+                TextSize = 10,
                 TextTruncate = Enum.TextTruncate.AtEnd,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = button,
@@ -1667,7 +1667,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(16, 38),
                 Text = "v",
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 12,
+                TextSize = 10,
                 Parent = button,
             })
 
@@ -1678,7 +1678,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(1, 0, 0, 0),
                 Visible = false,
                 Parent = button,
-                CornerRadius = UDim.new(0, 10),
+                CornerRadius = UDim.new(0, 8),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.2,
@@ -1735,11 +1735,11 @@ function Window:CreateTab(name, icon)
                     AutoButtonColor = false,
                     BackgroundColor3 = theme:Get("SurfaceAlt"),
                     BorderSizePixel = 0,
-                    Size = UDim2.new(1, 0, 0, 26),
+                    Size = UDim2.new(1, 0, 0, 22),
                     Text = value,
                     Font = Enum.Font.Gotham,
                     TextColor3 = theme:Get("Text"),
-                    TextSize = 12,
+                    TextSize = 10,
                     Parent = menuList,
                     CornerRadius = UDim.new(0, 8),
                 })
@@ -1811,9 +1811,9 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(220, 38),
                 Text = "",
                 TextColor3 = theme:Get("Text"),
-                TextSize = 12,
+                TextSize = 10,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 10),
+                CornerRadius = UDim.new(0, 8),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -1859,9 +1859,9 @@ function Window:CreateTab(name, icon)
                 Text = component.Value.Name,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 12,
+                TextSize = 10,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 10),
+                CornerRadius = UDim.new(0, 8),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -1918,7 +1918,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(58, 38),
                 Text = "",
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 10),
+                CornerRadius = UDim.new(0, 8),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -1933,7 +1933,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(230, 0),
                 Visible = false,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 12),
+                CornerRadius = UDim.new(0, 4),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.2,
@@ -1956,7 +1956,7 @@ function Window:CreateTab(name, icon)
                 Image = "rbxassetid://4155801252",
                 Size = UDim2.fromOffset(210, 120),
                 Parent = popup,
-                CornerRadius = UDim.new(0, 10),
+                CornerRadius = UDim.new(0, 8),
             })
             local colorCursor = Utility.Create("Frame", {
                 AnchorPoint = Vector2.new(0.5, 0.5),
