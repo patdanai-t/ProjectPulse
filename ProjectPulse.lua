@@ -1,3 +1,24 @@
+--[[
+ProjectPulse - Simple Example
+
+local Library = loadstring(game:HttpGet("URL"))()
+local UI = Library.new()
+local Window = UI:Window("My UI")
+
+local Main = Window:Tab("Main")
+
+Main:Button("Click", function()
+    print("Hello")
+end)
+
+Main:Toggle("Auto Farm", false, function(value)
+    print(value)
+end)
+
+Main:Slider("Speed", 0, 100, 25, function(value)
+    print(value)
+end)
+]]
 local compatUnpack = table.unpack or unpack
 local compatTypeOf = typeof or type
 local compatRound = math.round or function(value)
@@ -2023,8 +2044,117 @@ function Window:CreateTab(name, icon)
             return registerComponent(component)
         end
 
+        function section:Label(...)
+            return self:CreateLabel(...)
+        end
+
+        function section:Paragraph(...)
+            return self:CreateParagraph(...)
+        end
+
+        function section:Button(...)
+            return self:CreateButton(...)
+        end
+
+        function section:Toggle(...)
+            return self:CreateToggle(...)
+        end
+
+        function section:Slider(labelText, min, max, defaultValue, callback)
+            if type(min) == "table" then
+                return self:CreateSlider(labelText, min, max)
+            end
+
+            return self:CreateSlider(labelText, {
+                Min = min or 0,
+                Max = max or 100,
+                Default = defaultValue or min or 0,
+            }, callback)
+        end
+
+        function section:Dropdown(...)
+            return self:CreateDropdown(...)
+        end
+
+        function section:MultiDropdown(...)
+            return self:CreateMultiDropdown(...)
+        end
+
+        function section:Textbox(...)
+            return self:CreateTextbox(...)
+        end
+
+        function section:Keybind(...)
+            return self:CreateKeybind(...)
+        end
+
+        function section:ColorPicker(...)
+            return self:CreateColorPicker(...)
+        end
+
         table.insert(self.Sections, section)
         return section
+    end
+
+    function tab:_ensureSection()
+        if not self._defaultSection then
+            self._defaultSection = self:CreateSection("General")
+        end
+
+        return self._defaultSection
+    end
+
+    function tab:Section(name)
+        return self:CreateSection(name or "General")
+    end
+
+    function tab:Button(labelText, callback, tooltip)
+        return self:_ensureSection():Button(labelText or "Button", callback, tooltip)
+    end
+
+    function tab:Toggle(labelText, defaultValue, callback, tooltip)
+        if type(defaultValue) == "function" and callback == nil then
+            callback = defaultValue
+            defaultValue = false
+        end
+
+        return self:_ensureSection():Toggle(labelText or "Toggle", callback, defaultValue or false, tooltip)
+    end
+
+    function tab:Slider(labelText, min, max, defaultValue, callback)
+        if type(min) == "table" then
+            return self:_ensureSection():Slider(labelText or "Slider", min, max)
+        end
+
+        return self:_ensureSection():Slider(labelText or "Slider", min or 0, max or 100, defaultValue or min or 0, callback)
+    end
+
+    function tab:Dropdown(labelText, values, callback)
+        return self:_ensureSection():Dropdown(labelText or "Dropdown", values or {}, callback)
+    end
+
+    function tab:MultiDropdown(labelText, values, callback)
+        return self:_ensureSection():MultiDropdown(labelText or "Multi Dropdown", values or {}, callback)
+    end
+
+    function tab:Textbox(labelText, placeholder, callback)
+        return self:_ensureSection():Textbox(labelText or "Textbox", placeholder or "Enter text", callback)
+    end
+
+    function tab:Keybind(labelText, defaultKey, callback)
+        return self:_ensureSection():Keybind(labelText or "Keybind", defaultKey or Enum.KeyCode.E, callback)
+    end
+
+    function tab:ColorPicker(labelText, defaultColor, callback)
+        return self:_ensureSection():ColorPicker(labelText or "Color Picker", defaultColor or theme:Get("Accent"), callback)
+    end
+
+    function tab:Label(title, text)
+        return self:_ensureSection():Label(title or "Label", text or "")
+    end
+
+    function tab:Paragraph(title, text)
+        return self:_ensureSection():Paragraph(title or "Paragraph", text or "")
     end
 
     tab.Button.MouseButton1Click:Connect(function()
@@ -2037,6 +2167,10 @@ function Window:CreateTab(name, icon)
     end
 
     return tab
+end
+
+function Window:Tab(name, icon)
+    return self:CreateTab(name, icon)
 end
 
 function Window:Destroy()
@@ -2142,6 +2276,9 @@ function Library:CreateWindow(title, options)
                 end,
             }
         end,
+        Tab = function(self, ...)
+            return self:CreateTab(...)
+        end,
         SetVisible = function()
         end,
         RefreshTheme = function()
@@ -2155,6 +2292,10 @@ function Library:CreateWindow(title, options)
         Destroy = function()
         end,
     }
+end
+
+function Library:Window(title, options)
+    return self:CreateWindow(title, options)
 end
 
 function Library:Notify(options)
@@ -2193,6 +2334,7 @@ end
 local function createLibrary()
     local ok, libraryObject = pcall(Library.new)
     if ok and type(libraryObject) == "table" then
+        libraryObject.new = createLibrary
         return libraryObject
     end
 
@@ -2204,6 +2346,7 @@ local function createLibrary()
         Windows = {},
     }
 
+    fallback.new = createLibrary
     setmetatable(fallback, {__index = Library})
     return fallback
 end
