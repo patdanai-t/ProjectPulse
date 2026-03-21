@@ -1486,9 +1486,8 @@ function Window:CreateTab(name, icon)
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         CanvasSize = UDim2.fromOffset(0, 0),
-        ScrollBarImageColor3 = theme:Get("TextMuted"),
-        ScrollBarImageTransparency = 0.35,
-        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = theme:Get("Accent"),
+        ScrollBarThickness = 4,
         Size = UDim2.new(1, -28, 1, -28),
         Position = UDim2.fromOffset(16, 12),
         Visible = false,
@@ -2614,3 +2613,6 @@ local function createLibrary()
 end
 
 return createLibrary()
+
+
+
