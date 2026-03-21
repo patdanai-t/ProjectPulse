@@ -98,6 +98,22 @@ local function findAncestorOfClass(instance, className)
 
     return nil
 end
+local function normalizeImageSource(source)
+    if type(source) == "number" then
+        return "rbxassetid://" .. tostring(source)
+    end
+
+    if type(source) ~= "string" then
+        return ""
+    end
+
+    if source:match("^%d+$") then
+        return "rbxassetid://" .. source
+    end
+
+    return source
+end
+
 local Theme = (function()
 local Theme = {}
 Theme.__index = Theme
@@ -1671,6 +1687,52 @@ function Window:CreateTab(name, icon)
             return self:CreateLabel(title, text)
         end
 
+        function section:CreateImage(title, imageSource, options)
+            options = options or {}
+            local component = baseElement("Image", title or "Image", nil, normalizeImageSource(imageSource), options.Description)
+            local imageHeight = options.Height or 120
+            local topOffset = component.DescriptionLabel.TextTransparency == 0 and 34 or 20
+            component.Frame.Size = UDim2.new(1, 0, 0, topOffset + imageHeight + 8)
+            component.Label.Size = UDim2.new(1, 0, 0, 16)
+
+            local image = Utility.Create("ImageLabel", {
+                BackgroundColor3 = theme:Get("Surface"),
+                BackgroundTransparency = 0.02,
+                BorderSizePixel = 0,
+                ClipsDescendants = true,
+                Image = component.Value,
+                Position = UDim2.fromOffset(0, topOffset),
+                ScaleType = options.ScaleType or Enum.ScaleType.Crop,
+                Size = UDim2.new(1, 0, 0, imageHeight),
+                Parent = component.Frame,
+                CornerRadius = UDim.new(0, 8),
+                Stroke = {
+                    Color = theme:Get("Border"),
+                    Transparency = 0.25,
+                    Thickness = 1,
+                },
+            })
+
+            if options.TileSize then
+                image.TileSize = options.TileSize
+            end
+
+            component.Set = function(value)
+                component.Value = normalizeImageSource(value)
+                image.Image = component.Value
+            end
+
+            function component:GetSerialized()
+                return {Value = self.Value}
+            end
+
+            return registerComponent(component)
+        end
+
+        function section:CreateBanner(...)
+            return self:CreateImage(...)
+        end
+
         function section:CreateButton(labelText, callback, tooltip)
             local component = baseElement("Button", labelText, callback, false, tooltip)
             local button = Utility.Create("TextButton", {
@@ -2313,6 +2375,14 @@ function Window:CreateTab(name, icon)
             return self:CreateParagraph(...)
         end
 
+        function section:Image(...)
+            return self:CreateImage(...)
+        end
+
+        function section:Banner(...)
+            return self:CreateBanner(...)
+        end
+
         function section:Button(...)
             return self:CreateButton(...)
         end
@@ -2367,6 +2437,14 @@ function Window:CreateTab(name, icon)
 
     function tab:Section(name)
         return self:CreateSection(name or "General")
+    end
+
+    function tab:Image(title, imageSource, options)
+        return self:_ensureSection():Image(title or "Image", imageSource or "", options)
+    end
+
+    function tab:Banner(title, imageSource, options)
+        return self:_ensureSection():Banner(title or "Banner", imageSource or "", options)
     end
 
     function tab:Button(labelText, callback, tooltip)
