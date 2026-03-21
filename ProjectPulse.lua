@@ -221,24 +221,54 @@ function Utility.Shadow(parent, transparency)
         BackgroundTransparency = 1,
         Image = "rbxassetid://1316045217",
         ImageColor3 = Color3.fromRGB(0, 0, 0),
-        ImageTransparency = transparency or 0.45,
+        ImageTransparency = transparency or 0.7,
         Position = UDim2.fromScale(0.5, 0.5),
         ScaleType = Enum.ScaleType.Slice,
-        Size = UDim2.new(1, 48, 1, 48),
+        Size = UDim2.new(1, 30, 1, 30),
         SliceCenter = Rect.new(10, 10, 118, 118),
         ZIndex = math.max(parent.ZIndex - 1, 0),
         Parent = parent,
     })
 end
 
+function Utility.PointInBounds(point, gui)
+    local position = gui.AbsolutePosition
+    local size = gui.AbsoluteSize
+    return point.X >= position.X and point.X <= position.X + size.X and point.Y >= position.Y and point.Y <= position.Y + size.Y
+end
+
+function Utility.IsInteractiveObject(object)
+    return object:IsA("TextButton")
+        or object:IsA("ImageButton")
+        or object:IsA("TextBox")
+        or object:IsA("ScrollingFrame")
+end
+
+function Utility.HasInteractiveDescendantAt(root, point)
+    for _, descendant in ipairs(root:GetDescendants()) do
+        if Utility.IsInteractiveObject(descendant) and descendant.Visible and Utility.PointInBounds(point, descendant) then
+            return true
+        end
+    end
+
+    return false
+end
+
 function Utility.MakeDraggable(handle, root)
     local dragging = false
     local dragStart
     local startPosition
-    local connection
+    local dragConnection
+    local endConnection
+    local activeTween
 
     handle.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+            return
+        end
+
+        local mousePosition = UserInputService:GetMouseLocation()
+        if Utility.HasInteractiveDescendantAt(root, mousePosition) then
             return
         end
 
@@ -255,26 +285,40 @@ function Utility.MakeDraggable(handle, root)
         end)
     end)
 
-    connection = RunService.RenderStepped:Connect(function()
-        if not dragging or not dragStart then
+    dragConnection = UserInputService.InputChanged:Connect(function(input)
+        if not dragging or input.UserInputType ~= Enum.UserInputType.MouseMovement then
             return
         end
 
-        local mousePosition = UserInputService:GetMouseLocation()
-        local delta = mousePosition - dragStart
-        root.Position = UDim2.new(
+        local delta = input.Position - dragStart
+        local goal = UDim2.new(
             startPosition.X.Scale,
             startPosition.X.Offset + delta.X,
             startPosition.Y.Scale,
             startPosition.Y.Offset + delta.Y
         )
+
+        if activeTween and activeTween.Cancel then
+            activeTween:Cancel()
+        end
+
+        activeTween = Utility.FastTween(root, {Position = goal}, 0.08, Enum.EasingStyle.Quad)
+    end)
+
+    endConnection = UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
     end)
 
     local destroyingSignal = root.Destroying
     if destroyingSignal and destroyingSignal.Connect then
         destroyingSignal:Connect(function()
-            if connection then
-                connection:Disconnect()
+            if dragConnection then
+                dragConnection:Disconnect()
+            end
+            if endConnection then
+                endConnection:Disconnect()
             end
         end)
     end
@@ -650,10 +694,14 @@ local function createIconButton(theme, parent, color, glyph)
         CornerRadius = UDim.new(1, 0),
         Stroke = {
             Color = color:Lerp(Color3.new(0, 0, 0), 0.35),
-            Transparency = 0.3,
+            Transparency = 0.42,
             Thickness = 1,
         },
     })
+
+    local scale = Instance.new("UIScale")
+    scale.Scale = 1
+    scale.Parent = button
 
     local icon = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
@@ -667,19 +715,27 @@ local function createIconButton(theme, parent, color, glyph)
     })
 
     button.MouseEnter:Connect(function()
+        Utility.FastTween(scale, {Scale = 1.12}, 0.14, Enum.EasingStyle.Quad)
         Utility.FastTween(button, {
-            Size = UDim2.fromOffset(16, 16),
             BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), 0.12),
         }, 0.14)
         Utility.FastTween(icon, {TextTransparency = 0.05}, 0.14)
     end)
 
     button.MouseLeave:Connect(function()
+        Utility.FastTween(scale, {Scale = 1}, 0.14, Enum.EasingStyle.Quad)
         Utility.FastTween(button, {
-            Size = UDim2.fromOffset(14, 14),
             BackgroundColor3 = color,
         }, 0.14)
         Utility.FastTween(icon, {TextTransparency = 0.35}, 0.14)
+    end)
+
+    button.MouseButton1Down:Connect(function()
+        Utility.FastTween(scale, {Scale = 0.9}, 0.08, Enum.EasingStyle.Quad)
+    end)
+
+    button.MouseButton1Up:Connect(function()
+        Utility.FastTween(scale, {Scale = 1.08}, 0.1, Enum.EasingStyle.Quad)
     end)
 
     return button
@@ -757,7 +813,7 @@ function Window:_build()
             Rotation = 90,
         },
     })
-    Utility.Shadow(self.Main, 0.5)
+    Utility.Shadow(self.Main, 0.76)
 
     self.Topbar = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("SurfaceAlt"),
@@ -956,18 +1012,27 @@ function Window:_build()
         self:Destroy()
     end)
 
-    Utility.MakeDraggable(self.Topbar, self.Root)
+    self.WindowScale = Instance.new("UIScale")
+    self.WindowScale.Scale = 1
+    self.WindowScale.Parent = self.Main
+
+    Utility.MakeDraggable(self.Main, self.Root)
     self:Open()
 end
 
 function Window:Open()
-    self.Root.Size = UDim2.fromOffset(self.DefaultSize.X.Offset - 60, self.DefaultSize.Y.Offset - 60)
+    self.Root.Size = UDim2.fromOffset(self.DefaultSize.X.Offset - 70, self.DefaultSize.Y.Offset - 70)
     self.Main.BackgroundTransparency = 1
+    self.Main.Position = UDim2.fromOffset(0, 10)
+    self.WindowScale.Scale = 0.965
+
     if self.BlurEffect then
         Utility.FastTween(self.BlurEffect, {Size = 16}, 0.3)
     end
-    Utility.FastTween(self.Root, {Size = self.DefaultSize}, 0.28)
-    Utility.FastTween(self.Main, {BackgroundTransparency = 0}, 0.24)
+
+    Utility.FastTween(self.Root, {Size = self.DefaultSize}, 0.32)
+    Utility.FastTween(self.Main, {BackgroundTransparency = 0, Position = UDim2.fromOffset(0, 0)}, 0.26)
+    Utility.FastTween(self.WindowScale, {Scale = 1}, 0.28)
 end
 
 function Window:SetVisible(state)
@@ -978,8 +1043,16 @@ function Window:SetVisible(state)
         Utility.FastTween(self.BlurEffect, {Size = state and 16 or 0}, 0.24)
     end
 
-    local tween = Utility.FastTween(self.Main, {BackgroundTransparency = state and 0 or 1}, 0.2)
-    Utility.FastTween(self.Root, {Size = state and (self.State.Maximized and self.MaximizedSize or self.DefaultSize) or UDim2.fromOffset(self.DefaultSize.X.Offset - 60, self.DefaultSize.Y.Offset - 60)}, 0.22)
+    local targetSize = self.State.Maximized and self.MaximizedSize or self.DefaultSize
+    local tween = Utility.FastTween(self.Main, {
+        BackgroundTransparency = state and 0 or 1,
+        Position = state and UDim2.fromOffset(0, 0) or UDim2.fromOffset(0, 10),
+    }, 0.22)
+
+    Utility.FastTween(self.WindowScale, {Scale = state and 1 or 0.965}, 0.22)
+    Utility.FastTween(self.Root, {
+        Size = state and targetSize or UDim2.fromOffset(self.DefaultSize.X.Offset - 70, self.DefaultSize.Y.Offset - 70),
+    }, 0.24)
 
     if not state then
         tween.Completed:Connect(function()
@@ -992,16 +1065,27 @@ end
 
 function Window:SetMinimized(state)
     self.State.Minimized = state
-    self.Sidebar.Visible = not state
-    self.ContentShell.Visible = not state
 
     if state then
         self.State.Maximized = false
+        Utility.FastTween(self.Sidebar, {BackgroundTransparency = 1}, 0.16)
+        Utility.FastTween(self.ContentShell, {BackgroundTransparency = 1}, 0.16)
+        compatDelay(0.16, function()
+            if self.State.Minimized then
+                self.Sidebar.Visible = false
+                self.ContentShell.Visible = false
+            end
+        end)
+    else
+        self.Sidebar.Visible = true
+        self.ContentShell.Visible = true
+        Utility.FastTween(self.Sidebar, {BackgroundTransparency = 0}, 0.18)
+        Utility.FastTween(self.ContentShell, {BackgroundTransparency = 0}, 0.18)
     end
 
     Utility.FastTween(self.Root, {
         Size = state and self.MinimizedSize or (self.State.Maximized and self.MaximizedSize or self.DefaultSize),
-    }, 0.24)
+    }, 0.26)
 end
 
 function Window:SetMaximized(state)
@@ -1011,21 +1095,31 @@ function Window:SetMaximized(state)
         self.State.Minimized = false
         self.Sidebar.Visible = true
         self.ContentShell.Visible = true
+        Utility.FastTween(self.Sidebar, {BackgroundTransparency = 0}, 0.18)
+        Utility.FastTween(self.ContentShell, {BackgroundTransparency = 0}, 0.18)
     end
 
     Utility.FastTween(self.Root, {
         Size = state and self.MaximizedSize or (self.State.Minimized and self.MinimizedSize or self.DefaultSize),
-    }, 0.26)
+    }, 0.28)
 end
 
 function Window:RefreshTheme()
     local theme = self.Theme
     self.Main.BackgroundColor3 = theme:Get("Background")
+    self.Topbar.BackgroundColor3 = theme:Get("SurfaceAlt")
     self.Sidebar.BackgroundColor3 = theme:Get("Sidebar")
     self.ContentShell.BackgroundColor3 = theme:Get("Surface")
     self.SearchBox.BackgroundColor3 = theme:Get("SurfaceAlt")
     self.SearchBox.TextColor3 = theme:Get("Text")
     self.SearchBox.PlaceholderColor3 = theme:Get("TextMuted")
+
+    if self.TitleLabel then
+        self.TitleLabel.TextColor3 = theme:Get("Text")
+    end
+    if self.SubtitleLabel then
+        self.SubtitleLabel.TextColor3 = theme:Get("TextMuted")
+    end
 
     for _, tab in ipairs(self.Tabs) do
         if tab.Selected then
@@ -1164,18 +1258,40 @@ function Window:CreateTab(name, icon)
 
     function tab:Select()
         for _, other in ipairs(self.Window.Tabs) do
-            other.Selected = false
-            other.Page.Visible = false
-            other.Button.BackgroundColor3 = theme:Get("SurfaceAlt")
-            other.IconLabel.TextColor3 = theme:Get("Accent")
-            other.NameLabel.TextColor3 = theme:Get("TextMuted")
+            if other == self then
+            else
+                other.Selected = false
+                other.Button.BackgroundColor3 = theme:Get("SurfaceAlt")
+                other.IconLabel.TextColor3 = theme:Get("Accent")
+                other.NameLabel.TextColor3 = theme:Get("TextMuted")
+
+                if other.Page.Visible then
+                    local previousPage = other.Page
+                    Utility.FastTween(previousPage, {
+                        Position = UDim2.fromOffset(34, 14),
+                        ScrollBarImageTransparency = 1,
+                    }, 0.12, Enum.EasingStyle.Quad)
+                    compatDelay(0.12, function()
+                        if not other.Selected and previousPage then
+                            previousPage.Visible = false
+                            previousPage.Position = UDim2.fromOffset(14, 14)
+                        end
+                    end)
+                end
+            end
         end
 
         self.Selected = true
         self.Page.Visible = true
+        self.Page.Position = UDim2.fromOffset(-6, 14)
+        self.Page.ScrollBarImageTransparency = 1
         self.Button.BackgroundColor3 = theme:Get("AccentDark")
         self.IconLabel.TextColor3 = theme:Get("Text")
         self.NameLabel.TextColor3 = theme:Get("Text")
+        Utility.FastTween(self.Page, {
+            Position = UDim2.fromOffset(14, 14),
+            ScrollBarImageTransparency = 0,
+        }, 0.16, Enum.EasingStyle.Quad)
     end
 
     function tab:CreateSection(sectionName)
