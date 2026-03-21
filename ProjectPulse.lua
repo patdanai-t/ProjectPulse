@@ -781,9 +781,9 @@ function Window.new(library, title, options)
         ReopenWithoutBlur = false,
     }
 
-    self.DefaultSize = UDim2.fromOffset(900, 560)
-    self.MinimizedSize = UDim2.fromOffset(900, 54)
-    self.MaximizedSize = UDim2.fromScale(0.84, 0.8)
+    self.DefaultSize = UDim2.fromOffset(816, 492)
+    self.MinimizedSize = UDim2.fromOffset(816, 42)
+    self.MaximizedSize = UDim2.fromScale(0.78, 0.72)
 
     self:_build()
 
@@ -841,19 +841,19 @@ function Window:_build()
 
     self.Topbar = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("SurfaceAlt"),
-        BackgroundTransparency = 0.16,
-        Position = UDim2.fromOffset(16, 12),
-        Size = UDim2.new(1, -28, 0, 58),
+        BackgroundTransparency = 0.04,
+        Position = UDim2.fromOffset(0, 0),
+        Size = UDim2.new(1, 0, 0, 42),
         Parent = self.Main,
         CornerRadius = UDim.new(0, 14),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.6,
+            Transparency = 0.72,
             Thickness = 1,
         },
         Padding = {
-            PaddingLeft = UDim.new(0, 14),
-            PaddingRight = UDim.new(0, 14),
+            PaddingLeft = UDim.new(0, 12),
+            PaddingRight = UDim.new(0, 12),
             PaddingTop = UDim.new(0, 6),
             PaddingBottom = UDim.new(0, 6),
         },
@@ -862,13 +862,13 @@ function Window:_build()
     self.Sidebar = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("Sidebar"),
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(14, 86),
-        Size = UDim2.new(0, 214, 1, -100),
+        Position = UDim2.fromOffset(0, 42),
+        Size = UDim2.new(0, 138, 1, -42),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 14),
+        CornerRadius = UDim.new(0, 0),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.16,
+            Transparency = 0.7,
             Thickness = 1,
         },
     })
@@ -876,13 +876,13 @@ function Window:_build()
     self.ContentShell = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("Surface"),
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 242, 0, 86),
-        Size = UDim2.new(1, -256, 1, -100),
+        Position = UDim2.new(0, 138, 0, 42),
+        Size = UDim2.new(1, -138, 1, -42),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 14),
+        CornerRadius = UDim.new(0, 0),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.16,
+            Transparency = 0.85,
             Thickness = 1,
         },
     })
@@ -995,7 +995,7 @@ function Window:_build()
     Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
-        Position = UDim2.fromOffset(18, 4),
+        Position = UDim2.fromOffset(12, 0),
         Size = UDim2.new(1, -18, 0, 16),
         Text = "RightShift",
         TextColor3 = theme:Get("Text"),
@@ -1007,7 +1007,7 @@ function Window:_build()
     Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.Gotham,
-        Position = UDim2.fromOffset(18, 20),
+        Position = UDim2.fromOffset(12, 10),
         Size = UDim2.new(1, -18, 0, 16),
         Text = "Toggle library visibility",
         TextColor3 = theme:Get("TextMuted"),
@@ -1406,23 +1406,47 @@ function Window:CreateTab(name, icon)
             return component
         end
 
-        local function baseElement(kind, labelText, callback, defaultValue)
+        local function baseElement(kind, labelText, callback, defaultValue, description)
             local id = string.format("%s_%s_%s", self.Name, sectionName, labelText):gsub("%W", "_")
+            local hasDescription = description ~= nil and description ~= ""
             local holder = Utility.Create("Frame", {
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 36),
+                Size = UDim2.new(1, 0, 0, hasDescription and 50 or 34),
                 Parent = section.Frame,
             })
 
             local label = Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Font = Enum.Font.GothamMedium,
-                Position = UDim2.fromOffset(0, 2),
-                Size = UDim2.new(0.6, 0, 0, 16),
+                Position = UDim2.fromOffset(0, 0),
+                Size = UDim2.new(0.62, 0, 0, 14),
                 Text = labelText,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 11,
+                TextSize = 12,
                 TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = holder,
+            })
+
+            local descriptionLabel = Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Font = Enum.Font.Gotham,
+                Position = UDim2.fromOffset(0, 16),
+                Size = UDim2.new(0.62, 0, 0, 14),
+                Text = description or "",
+                TextColor3 = theme:Get("TextMuted"),
+                TextSize = 10,
+                TextTransparency = hasDescription and 0 or 1,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = holder,
+            })
+
+            Utility.Create("Frame", {
+                AnchorPoint = Vector2.new(0, 1),
+                BackgroundColor3 = theme:Get("Border"),
+                BackgroundTransparency = 0.45,
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, 1),
                 Parent = holder,
             })
 
@@ -1430,6 +1454,7 @@ function Window:CreateTab(name, icon)
                 Id = id,
                 Kind = kind,
                 Label = label,
+                DescriptionLabel = descriptionLabel,
                 Frame = holder,
                 SearchText = labelText,
                 Callback = callback,
@@ -1440,13 +1465,13 @@ function Window:CreateTab(name, icon)
 
         function section:CreateLabel(title, text)
             local component = baseElement("Label", title, nil, text)
-            component.Frame.Size = UDim2.new(1, 0, 0, 46)
+            component.Frame.Size = UDim2.new(1, 0, 0, 40)
             component.Label.Size = UDim2.new(1, 0, 0, 16)
 
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Font = Enum.Font.Gotham,
-                Position = UDim2.fromOffset(0, 22),
+                Position = UDim2.fromOffset(0, 16),
                 Size = UDim2.new(1, 0, 0, 34),
                 Text = text,
                 TextColor3 = theme:Get("TextMuted"),
@@ -1469,19 +1494,19 @@ function Window:CreateTab(name, icon)
         end
 
         function section:CreateButton(labelText, callback, tooltip)
-            local component = baseElement("Button", labelText, callback, false)
+            local component = baseElement("Button", labelText, callback, false, tooltip)
             local button = Utility.Create("TextButton", {
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("AccentDark"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -150, 0, 0),
-                Size = UDim2.fromOffset(150, 38),
+                Position = UDim2.new(1, -112, 0, 5),
+                Size = UDim2.fromOffset(112, 24),
                 Text = labelText,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 11,
+                TextSize = 10,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 8),
+                CornerRadius = UDim.new(0, 5),
             })
             Utility.Ripple(button, theme)
 
@@ -1503,13 +1528,13 @@ function Window:CreateTab(name, icon)
         end
 
         function section:CreateToggle(labelText, callback, defaultValue, tooltip)
-            local component = baseElement("Toggle", labelText, callback, defaultValue or false)
+            local component = baseElement("Toggle", labelText, callback, defaultValue or false, tooltip)
             local pill = Utility.Create("TextButton", {
                 AutoButtonColor = false,
-                BackgroundColor3 = component.Value and theme:Get("Accent") or theme:Get("Border"),
+                BackgroundColor3 = component.Value and theme:Get("Accent") or Color3.fromRGB(82, 82, 86),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -58, 0, 6),
-                Size = UDim2.fromOffset(58, 26),
+                Position = UDim2.new(1, -38, 0, 15),
+                Size = UDim2.fromOffset(30, 16),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(1, 0),
@@ -1517,15 +1542,15 @@ function Window:CreateTab(name, icon)
             local knob = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 BorderSizePixel = 0,
-                Position = component.Value and UDim2.fromOffset(34, 3) or UDim2.fromOffset(3, 3),
-                Size = UDim2.fromOffset(20, 20),
+                Position = component.Value and UDim2.fromOffset(16, 2) or UDim2.fromOffset(2, 2),
+                Size = UDim2.fromOffset(12, 12),
                 Parent = pill,
                 CornerRadius = UDim.new(1, 0),
             })
 
             local function apply(state, silent)
                 component.Value = state
-                Utility.FastTween(pill, {BackgroundColor3 = state and theme:Get("Accent") or theme:Get("Border")}, 0.18)
+                Utility.FastTween(pill, {BackgroundColor3 = state and theme:Get("Accent") or Color3.fromRGB(82, 82, 86)}, 0.18)
                 Utility.FastTween(knob, {Position = state and UDim2.fromOffset(18, 2) or UDim2.fromOffset(2, 2)}, 0.18)
                 if callback and not silent then
                     callback(state)
@@ -1552,26 +1577,26 @@ function Window:CreateTab(name, icon)
             options = options or {}
             local min = options.Min or 0
             local max = options.Max or 100
-            local component = baseElement("Slider", labelText, callback, options.Default or min)
-            component.Frame.Size = UDim2.new(1, 0, 0, 44)
+            local component = baseElement("Slider", labelText, callback, options.Default or min, options.Description)
+            component.Frame.Size = UDim2.new(1, 0, 0, component.DescriptionLabel.TextTransparency == 0 and 52 or 36)
 
             local valueLabel = Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Font = Enum.Font.GothamBold,
-                Position = UDim2.new(1, -64, 0, 0),
-                Size = UDim2.fromOffset(64, 16),
-                Text = Utility.FormatValue(component.Value),
-                TextColor3 = theme:Get("Accent"),
+                Position = UDim2.new(0, 96, 0, 0),
+                Size = UDim2.fromOffset(52, 14),
+                Text = "(" .. Utility.FormatValue(component.Value) .. ")",
+                TextColor3 = theme:Get("TextMuted"),
                 TextSize = 10,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = component.Frame,
             })
 
             local track = Utility.Create("Frame", {
-                BackgroundColor3 = theme:Get("Border"),
+                BackgroundColor3 = Color3.fromRGB(82, 82, 86),
                 BorderSizePixel = 0,
-                Position = UDim2.fromOffset(0, 30),
-                Size = UDim2.new(1, 0, 0, 8),
+                Position = UDim2.new(1, -150, 0, 18),
+                Size = UDim2.fromOffset(120, 3),
                 Parent = component.Frame,
                 CornerRadius = UDim.new(1, 0),
             })
@@ -1595,7 +1620,7 @@ function Window:CreateTab(name, icon)
                 end
                 component.Value = value
                 fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-                valueLabel.Text = Utility.FormatValue(value)
+                valueLabel.Text = "(" .. Utility.FormatValue(value) .. ")"
                 if callback and not silent then
                     callback(value)
                 end
