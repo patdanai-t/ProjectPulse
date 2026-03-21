@@ -1,32 +1,5 @@
---[[
-ProjectPulse - Simple Example
-
-local Library = loadstring(game:HttpGet("URL"))()
-local UI = Library.new()
-local Window = UI:Window("My UI")
-
-local Main = Window:Tab("Main")
-
-Main:Button("Click", function()
-    print("Hello")
-end)
-
-Main:Toggle("Auto Farm", false, function(value)
-    print(value)
-end)
-
-Main:Slider("Speed", 0, 100, 25, function(value)
-    print(value)
-end)
-]]
 local compatUnpack = table.unpack or unpack
 local compatTypeOf = typeof or type
-local compatRound = math.round or function(value)
-    if value >= 0 then
-        return math.floor(value + 0.5)
-    end
-    return math.ceil(value - 0.5)
-end
 
 local function safeTableClone(source)
     local copy = {}
@@ -45,73 +18,20 @@ local function safeAssign(target, key, value)
     end)
 end
 
-local function compatDelay(duration, callback, ...)
-    if type(callback) ~= "function" then
-        return nil
-    end
-
-    local args = {...}
-    local taskLibrary = rawget(_G, "task")
-    if taskLibrary and type(taskLibrary.delay) == "function" then
-        return taskLibrary.delay(duration, callback, compatUnpack(args))
-    end
-
-    if type(delay) == "function" then
-        return delay(duration, function()
-            callback(compatUnpack(args))
-        end)
-    end
-
-    local waitFunction = (taskLibrary and type(taskLibrary.wait) == "function" and taskLibrary.wait) or wait
-    return coroutine.wrap(function()
-        if type(waitFunction) == "function" then
-            waitFunction(duration)
-        end
-        callback(compatUnpack(args))
-    end)()
-end
-
-local function findAncestorOfClass(instance, className)
-    if not instance then
-        return nil
-    end
-
-    if type(instance.FindFirstAncestorOfClass) == "function" then
-        local ok, result = pcall(instance.FindFirstAncestorOfClass, instance, className)
-        if ok and result then
-            return result
-        end
-    end
-
-    local current = instance.Parent
-    while current do
-        local matches = current.ClassName == className
-        if not matches and type(current.IsA) == "function" then
-            local ok, result = pcall(current.IsA, current, className)
-            matches = ok and result or false
-        end
-        if matches then
-            return current
-        end
-        current = current.Parent
-    end
-
-    return nil
-end
 local Theme = (function()
 local Theme = {}
 Theme.__index = Theme
 
 local DEFAULT = {
-    Background = Color3.fromRGB(29, 29, 31),
-    Surface = Color3.fromRGB(35, 35, 37),
-    SurfaceAlt = Color3.fromRGB(42, 42, 45),
-    Sidebar = Color3.fromRGB(32, 32, 34),
-    Border = Color3.fromRGB(58, 58, 61),
-    Text = Color3.fromRGB(235, 235, 236),
-    TextMuted = Color3.fromRGB(156, 156, 160),
-    Accent = Color3.fromRGB(255, 32, 93),
-    AccentDark = Color3.fromRGB(185, 24, 72),
+    Background = Color3.fromRGB(11, 12, 16),
+    Surface = Color3.fromRGB(18, 20, 27),
+    SurfaceAlt = Color3.fromRGB(23, 26, 35),
+    Sidebar = Color3.fromRGB(14, 15, 20),
+    Border = Color3.fromRGB(46, 49, 60),
+    Text = Color3.fromRGB(240, 242, 247),
+    TextMuted = Color3.fromRGB(148, 153, 168),
+    Accent = Color3.fromRGB(255, 56, 121),
+    AccentDark = Color3.fromRGB(168, 24, 81),
     Success = Color3.fromRGB(80, 220, 160),
     Warning = Color3.fromRGB(255, 191, 89),
     Danger = Color3.fromRGB(255, 94, 94),
@@ -195,28 +115,9 @@ function Utility.Create(className, properties)
 end
 
 function Utility.Tween(instance, info, properties)
-    local ok, tween = pcall(function()
-        return TweenService:Create(instance, info, properties)
-    end)
-
-    if ok and tween then
-        tween:Play()
-        return tween
-    end
-
-    for key, value in pairs(properties or {}) do
-        safeAssign(instance, key, value)
-    end
-
-    return {
-        Completed = {
-            Connect = function(_, callback)
-                if type(callback) == "function" then
-                    callback()
-                end
-            end,
-        },
-    }
+    local tween = TweenService:Create(instance, info, properties)
+    tween:Play()
+    return tween
 end
 
 function Utility.FastTween(instance, properties, time, style, direction)
@@ -242,70 +143,24 @@ function Utility.Shadow(parent, transparency)
         BackgroundTransparency = 1,
         Image = "rbxassetid://1316045217",
         ImageColor3 = Color3.fromRGB(0, 0, 0),
-        ImageTransparency = transparency or 0.7,
+        ImageTransparency = transparency or 0.45,
         Position = UDim2.fromScale(0.5, 0.5),
         ScaleType = Enum.ScaleType.Slice,
-        Size = UDim2.new(1, 30, 1, 30),
+        Size = UDim2.new(1, 48, 1, 48),
         SliceCenter = Rect.new(10, 10, 118, 118),
         ZIndex = math.max(parent.ZIndex - 1, 0),
         Parent = parent,
     })
 end
 
-function Utility.PointInBounds(point, gui)
-    local position = gui.AbsolutePosition
-    local size = gui.AbsoluteSize
-    return point.X >= position.X and point.X <= position.X + size.X and point.Y >= position.Y and point.Y <= position.Y + size.Y
-end
-
-function Utility.IsInteractiveObject(object)
-    return object:IsA("TextButton")
-        or object:IsA("ImageButton")
-        or object:IsA("TextBox")
-        or object:IsA("ScrollingFrame")
-end
-
-function Utility.HasInteractiveDescendantAt(root, point)
-    local screenGui = findAncestorOfClass(root, "ScreenGui")
-    if screenGui and type(screenGui.GetGuiObjectsAtPosition) == "function" then
-        local ok, objects = pcall(screenGui.GetGuiObjectsAtPosition, screenGui, point.X, point.Y)
-        if ok and objects then
-            for _, object in ipairs(objects) do
-                if Utility.IsInteractiveObject(object) then
-                    return true
-                end
-            end
-            return false
-        end
-    end
-
-    for _, descendant in ipairs(root:GetDescendants()) do
-        if Utility.IsInteractiveObject(descendant) and descendant.Visible and Utility.PointInBounds(point, descendant) then
-            return true
-        end
-    end
-
-    return false
-end
-
 function Utility.MakeDraggable(handle, root)
     local dragging = false
     local dragStart
     local startPosition
-    local dragConnection
-    local endConnection
+    local connection
 
     handle.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 then
-            return
-        end
-
-        if UserInputService:GetFocusedTextBox() then
-            return
-        end
-
-        local mousePosition = UserInputService:GetMouseLocation()
-        if Utility.HasInteractiveDescendantAt(root, mousePosition) then
             return
         end
 
@@ -317,19 +172,18 @@ function Utility.MakeDraggable(handle, root)
         changedConnection = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
-                if changedConnection then
-                    changedConnection:Disconnect()
-                end
+                changedConnection:Disconnect()
             end
         end)
     end)
 
-    dragConnection = UserInputService.InputChanged:Connect(function(input)
-        if not dragging or input.UserInputType ~= Enum.UserInputType.MouseMovement then
+    connection = RunService.RenderStepped:Connect(function()
+        if not dragging or not dragStart then
             return
         end
 
-        local delta = input.Position - dragStart
+        local mousePosition = UserInputService:GetMouseLocation()
+        local delta = mousePosition - dragStart
         root.Position = UDim2.new(
             startPosition.X.Scale,
             startPosition.X.Offset + delta.X,
@@ -338,23 +192,11 @@ function Utility.MakeDraggable(handle, root)
         )
     end)
 
-    endConnection = UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
+    root.Destroying:Connect(function()
+        if connection then
+            connection:Disconnect()
         end
     end)
-
-    local destroyingSignal = root.Destroying
-    if destroyingSignal and destroyingSignal.Connect then
-        destroyingSignal:Connect(function()
-            if dragConnection then
-                dragConnection:Disconnect()
-            end
-            if endConnection then
-                endConnection:Disconnect()
-            end
-        end)
-    end
 end
 
 function Utility.Ripple(button, theme)
@@ -390,7 +232,7 @@ function Utility.Ripple(button, theme)
 end
 
 function Utility.Tooltip(target, text, theme)
-    local root = findAncestorOfClass(target, "ScreenGui")
+    local root = target:FindFirstAncestorOfClass("ScreenGui")
     if not root then
         return
     end
@@ -405,7 +247,7 @@ function Utility.Tooltip(target, text, theme)
         Size = UDim2.fromOffset(0, 0),
         Text = "  " .. text .. "  ",
         TextColor3 = theme:Get("Text"),
-        TextSize = 10,
+        TextSize = 12,
         TextTransparency = 1,
         Visible = false,
         ZIndex = 200,
@@ -600,6 +442,8 @@ return Keybinds
 end)()
 
 local Notifications = (function()
+local Utility = require(script.Parent.Utility)
+
 local Notifications = {}
 Notifications.__index = Notifications
 
@@ -634,7 +478,7 @@ function Notifications:Notify(options)
         Size = UDim2.fromOffset(320, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = self.Container,
-        CornerRadius = UDim.new(0, 4),
+        CornerRadius = UDim.new(0, 12),
         Stroke = {
             ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
             Color = theme:Get("Border"),
@@ -642,10 +486,10 @@ function Notifications:Notify(options)
             Thickness = 1,
         },
         Padding = {
-            PaddingBottom = UDim.new(0, 6),
+            PaddingBottom = UDim.new(0, 12),
             PaddingLeft = UDim.new(0, 14),
             PaddingRight = UDim.new(0, 14),
-            PaddingTop = UDim.new(0, 6),
+            PaddingTop = UDim.new(0, 12),
         },
     })
 
@@ -658,7 +502,7 @@ function Notifications:Notify(options)
         Font = Enum.Font.GothamBold,
         Text = options.Title or "ProjectPulse",
         TextColor3 = theme:Get("Text"),
-        TextSize = 11,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = card,
     })
@@ -670,7 +514,7 @@ function Notifications:Notify(options)
         Font = Enum.Font.Gotham,
         Text = options.Content or "Notification",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 10,
+        TextSize = 12,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = card,
@@ -689,7 +533,7 @@ function Notifications:Notify(options)
     Utility.FastTween(card, {Position = UDim2.fromOffset(0, 0), BackgroundTransparency = 0.04}, 0.26)
     Utility.FastTween(bar, {Size = UDim2.new(0, 0, 0, 3)}, options.Duration or 3, Enum.EasingStyle.Linear)
 
-    compatDelay(options.Duration or 3, function()
+    task.delay(options.Duration or 3, function()
         if not card.Parent then
             return
         end
@@ -709,6 +553,8 @@ local Window = (function()
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 
+local Utility = require(script.Parent.Utility)
+
 local Window = {}
 Window.__index = Window
 
@@ -716,131 +562,33 @@ local function refreshCanvas(frame, layout, padding)
     frame.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + (padding or 0))
 end
 
-local function createIconButton(theme, parent, color, glyph)
+local function createIconButton(theme, parent, text)
     local button = Utility.Create("TextButton", {
         AutoButtonColor = false,
-        BackgroundColor3 = color,
+        BackgroundColor3 = theme:Get("SurfaceAlt"),
         BorderSizePixel = 0,
-        Size = UDim2.fromOffset(14, 14),
+        Size = UDim2.fromOffset(28, 28),
         Text = "",
         Parent = parent,
         CornerRadius = UDim.new(1, 0),
         Stroke = {
-            Color = color:Lerp(Color3.new(0, 0, 0), 0.35),
-            Transparency = 0.42,
-            Thickness = 1,
-        },
-    })
-
-    local scale = Instance.new("UIScale")
-    scale.Scale = 1
-    scale.Parent = button
-
-    local icon = Utility.Create("TextLabel", {
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        Size = UDim2.fromScale(1, 1),
-        Text = glyph,
-        TextColor3 = Color3.fromRGB(35, 35, 35),
-        TextSize = 9,
-        TextTransparency = 0.35,
-        Parent = button,
-    })
-
-    button.MouseEnter:Connect(function()
-        Utility.FastTween(scale, {Scale = 1.12}, 0.14, Enum.EasingStyle.Quad)
-        Utility.FastTween(button, {
-            BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), 0.12),
-        }, 0.14)
-        Utility.FastTween(icon, {TextTransparency = 0.05}, 0.14)
-    end)
-
-    button.MouseLeave:Connect(function()
-        Utility.FastTween(scale, {Scale = 1}, 0.14, Enum.EasingStyle.Quad)
-        Utility.FastTween(button, {
-            BackgroundColor3 = color,
-        }, 0.14)
-        Utility.FastTween(icon, {TextTransparency = 0.35}, 0.14)
-    end)
-
-    button.MouseButton1Down:Connect(function()
-        Utility.FastTween(scale, {Scale = 0.9}, 0.08, Enum.EasingStyle.Quad)
-    end)
-
-    button.MouseButton1Up:Connect(function()
-        Utility.FastTween(scale, {Scale = 1.08}, 0.1, Enum.EasingStyle.Quad)
-    end)
-
-    return button
-end
-
-local function normalizeIconSource(icon)
-    if type(icon) ~= "string" then
-        return false, icon
-    end
-
-    if string.match(icon, "^rbxassetid://") or string.match(icon, "^rbxthumb://") or string.match(icon, "^http") then
-        return true, icon
-    end
-
-    if string.match(icon, "^%d+$") then
-        return true, "rbxassetid://" .. icon
-    end
-
-    return false, icon
-end
-
-local function createTopbarNavButton(theme, parent, glyph)
-    local button = Utility.Create("TextButton", {
-        BackgroundColor3 = theme:Get("Surface"),
-        AutoButtonColor = false,
-        BorderSizePixel = 0,
-        Size = UDim2.fromOffset(18, 18),
-        Text = "",
-        Parent = parent,
-        CornerRadius = UDim.new(0, 5),
-        Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.72,
+            Transparency = 0.25,
             Thickness = 1,
         },
     })
 
-    local scale = Instance.new("UIScale")
-    scale.Scale = 1
-    scale.Parent = button
-
-    local icon = Utility.Create("TextLabel", {
+    Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
         Size = UDim2.fromScale(1, 1),
-        Text = glyph,
+        Text = text,
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 10,
+        TextSize = 12,
         Parent = button,
     })
-    button.IconLabel = icon
 
-    button.MouseEnter:Connect(function()
-        Utility.FastTween(scale, {Scale = 1.08}, 0.12, Enum.EasingStyle.Quad)
-        Utility.FastTween(button, {BackgroundColor3 = theme:Get("SurfaceAlt")}, 0.12)
-        Utility.FastTween(icon, {TextColor3 = theme:Get("Text")}, 0.12)
-    end)
-
-    button.MouseLeave:Connect(function()
-        Utility.FastTween(scale, {Scale = 1}, 0.12, Enum.EasingStyle.Quad)
-        Utility.FastTween(button, {BackgroundColor3 = theme:Get("Surface")}, 0.12)
-        Utility.FastTween(icon, {TextColor3 = theme:Get("TextMuted")}, 0.12)
-    end)
-
-    button.MouseButton1Down:Connect(function()
-        Utility.FastTween(scale, {Scale = 0.93}, 0.08, Enum.EasingStyle.Quad)
-    end)
-
-    button.MouseButton1Up:Connect(function()
-        Utility.FastTween(scale, {Scale = 1.04}, 0.08, Enum.EasingStyle.Quad)
-    end)
-
+    Utility.Ripple(button, theme)
     return button
 end
 
@@ -858,15 +606,7 @@ function Window.new(library, title, options)
         Minimized = false,
         Maximized = false,
         Blur = options.Blur ~= false,
-        BlurAfterClose = options.BlurAfterClose == true,
-        Closed = false,
-        ReopenWithoutBlur = false,
-        Destroyed = false,
     }
-
-    self.DefaultSize = UDim2.fromOffset(816, 492)
-    self.MinimizedSize = UDim2.fromOffset(816, 42)
-    self.MaximizedSize = UDim2.fromScale(0.78, 0.72)
 
     self:_build()
 
@@ -896,7 +636,7 @@ function Window:_build()
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
         Position = UDim2.fromScale(0.5, 0.5),
-        Size = self.DefaultSize,
+        Size = UDim2.fromOffset(980, 640),
         Parent = self.Library.ScreenGui,
     })
 
@@ -905,7 +645,7 @@ function Window:_build()
         BorderSizePixel = 0,
         Size = UDim2.fromScale(1, 1),
         Parent = self.Root,
-        CornerRadius = UDim.new(0, 14),
+        CornerRadius = UDim.new(0, 18),
         Stroke = {
             ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
             Color = theme:Get("Border"),
@@ -920,38 +660,25 @@ function Window:_build()
             Rotation = 90,
         },
     })
-    Utility.Shadow(self.Main, 0.82)
+    Utility.Shadow(self.Main, 0.5)
 
     self.Topbar = Utility.Create("Frame", {
-        BackgroundColor3 = theme:Get("SurfaceAlt"),
-        BackgroundTransparency = 0.04,
-        Position = UDim2.fromOffset(0, 0),
-        Size = UDim2.new(1, 0, 0, 42),
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(12, 12),
+        Size = UDim2.new(1, -24, 0, 52),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 14),
-        Stroke = {
-            Color = theme:Get("Border"),
-            Transparency = 0.72,
-            Thickness = 1,
-        },
-        Padding = {
-            PaddingLeft = UDim.new(0, 12),
-            PaddingRight = UDim.new(0, 12),
-            PaddingTop = UDim.new(0, 6),
-            PaddingBottom = UDim.new(0, 6),
-        },
     })
 
     self.Sidebar = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("Sidebar"),
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(0, 42),
-        Size = UDim2.new(0, 138, 1, -42),
+        Position = UDim2.fromOffset(14, 74),
+        Size = UDim2.new(0, 210, 1, -88),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 0),
+        CornerRadius = UDim.new(0, 16),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.7,
+            Transparency = 0.16,
             Thickness = 1,
         },
     })
@@ -959,120 +686,80 @@ function Window:_build()
     self.ContentShell = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("Surface"),
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 138, 0, 42),
-        Size = UDim2.new(1, -138, 1, -42),
+        Position = UDim2.new(0, 236, 0, 74),
+        Size = UDim2.new(1, -250, 1, -88),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 0),
+        CornerRadius = UDim.new(0, 16),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.85,
-            Thickness = 1,
-        },
-    })
-
-    local titleGroup = Utility.Create("Frame", {
-        BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(14, 0),
-        Size = UDim2.new(1, -420, 1, 0),
-        Parent = self.Topbar,
-    })
-
-    self.TitleLabel = Utility.Create("TextLabel", {
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBlack,
-        Position = UDim2.fromOffset(0, -2),
-        Size = UDim2.new(1, 0, 0, 24),
-        Text = self.Title,
-        TextColor3 = theme:Get("Text"),
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = titleGroup,
-    })
-
-    self.SubtitleLabel = Utility.Create("TextLabel", {
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        Position = UDim2.fromOffset(0, 22),
-        Size = UDim2.new(1, 0, 0, 16),
-        Text = "Made by ProjectPulse Hub",
-        TextColor3 = theme:Get("TextMuted"),
-        TextSize = 10,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = titleGroup,
-    })
-
-    self.SearchShell = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundColor3 = theme:Get("Surface"),
-        BorderSizePixel = 0,
-        Position = UDim2.new(1, -92, 0.5, 0),
-        Size = UDim2.fromOffset(184, 24),
-        Parent = self.Topbar,
-        CornerRadius = UDim.new(0, 6),
-        Stroke = {
-            Color = theme:Get("Border"),
-            Transparency = 0.7,
+            Transparency = 0.16,
             Thickness = 1,
         },
     })
 
     Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        Position = UDim2.fromOffset(8, 0),
-        Size = UDim2.fromOffset(12, 24),
-        Text = "S",
-        TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
-        Parent = self.SearchShell,
+        Font = Enum.Font.GothamBlack,
+        Position = UDim2.fromOffset(10, 0),
+        Size = UDim2.new(0.6, 0, 1, 0),
+        Text = self.Title,
+        TextColor3 = theme:Get("Text"),
+        TextSize = 20,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = self.Topbar,
     })
 
-    self.SearchBox = Utility.Create("TextBox", {
+    Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        Position = UDim2.fromOffset(10, 24),
+        Size = UDim2.new(0.5, 0, 0, 20),
+        Text = "Premium Roblox interface toolkit",
+        TextColor3 = theme:Get("TextMuted"),
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = self.Topbar,
+    })
+
+    local controls = Utility.Create("Frame", {
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, 0, 0, 0),
+        Size = UDim2.fromOffset(118, 32),
+        Parent = self.Topbar,
+    })
+    local controlsLayout = Utility.NewListLayout(controls, 8)
+    controlsLayout.FillDirection = Enum.FillDirection.Horizontal
+    controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+
+    self.MinimizeButton = createIconButton(theme, controls, "_")
+    self.MaximizeButton = createIconButton(theme, controls, "[]")
+    self.CloseButton = createIconButton(theme, controls, "X")
+
+    self.SearchBox = Utility.Create("TextBox", {
+        BackgroundColor3 = theme:Get("SurfaceAlt"),
         BorderSizePixel = 0,
         ClearTextOnFocus = false,
         Font = Enum.Font.Gotham,
         PlaceholderColor3 = theme:Get("TextMuted"),
-        PlaceholderText = "Search",
-        Position = UDim2.fromOffset(24, 0),
-        Size = UDim2.new(1, -30, 1, 0),
+        PlaceholderText = "Search controls...",
+        Position = UDim2.fromOffset(14, 14),
+        Size = UDim2.new(1, -28, 0, 38),
         Text = "",
         TextColor3 = theme:Get("Text"),
-        TextSize = 10,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = self.SearchShell,
+        TextSize = 13,
+        Parent = self.Sidebar,
+        CornerRadius = UDim.new(0, 10),
+        Stroke = {
+            Color = theme:Get("Border"),
+            Transparency = 0.2,
+            Thickness = 1,
+        },
+        Padding = {
+            PaddingLeft = UDim.new(0, 12),
+            PaddingRight = UDim.new(0, 12),
+        },
     })
-
-    local navHolder = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -286, 0.5, 0),
-        Size = UDim2.fromOffset(48, 18),
-        Parent = self.Topbar,
-    })
-    local navLayout = Utility.NewListLayout(navHolder, 6)
-    navLayout.FillDirection = Enum.FillDirection.Horizontal
-    navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    navLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-    self.BackButton = createTopbarNavButton(theme, navHolder, "<")
-    self.ForwardButton = createTopbarNavButton(theme, navHolder, ">")
-
-    local controls = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -18, 0.5, 0),
-        Size = UDim2.fromOffset(64, 18),
-        Parent = self.Topbar,
-    })
-    local controlsLayout = Utility.NewListLayout(controls, 6)
-    controlsLayout.FillDirection = Enum.FillDirection.Horizontal
-    controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "")
-    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "")
-    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "")
 
     self.TabButtonHolder = Utility.Create("ScrollingFrame", {
         Active = true,
@@ -1080,13 +767,10 @@ function Window:_build()
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         CanvasSize = UDim2.fromOffset(0, 0),
-        Position = UDim2.fromOffset(10, 14),
-        ScrollingDirection = Enum.ScrollingDirection.Y,
-        VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
-        ScrollBarImageColor3 = theme:Get("TextMuted"),
-        ScrollBarImageTransparency = 0.34,
-        ScrollBarThickness = 4,
-        Size = UDim2.new(1, -20, 1, -76),
+        Position = UDim2.fromOffset(10, 62),
+        ScrollBarImageColor3 = theme:Get("Accent"),
+        ScrollBarThickness = 3,
+        Size = UDim2.new(1, -20, 1, -124),
         Parent = self.Sidebar,
     })
     self.TabButtonLayout = Utility.NewListLayout(self.TabButtonHolder, 8)
@@ -1114,11 +798,11 @@ function Window:_build()
     Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
-        Position = UDim2.fromOffset(12, 0),
+        Position = UDim2.fromOffset(18, 4),
         Size = UDim2.new(1, -18, 0, 16),
-        Text = "Toggle Key",
+        Text = "RightShift",
         TextColor3 = theme:Get("Text"),
-        TextSize = 10,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.SidebarFooter,
     })
@@ -1126,9 +810,9 @@ function Window:_build()
     Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.Gotham,
-        Position = UDim2.fromOffset(12, 10),
+        Position = UDim2.fromOffset(18, 20),
         Size = UDim2.new(1, -18, 0, 16),
-        Text = "RightShift",
+        Text = "Toggle library visibility",
         TextColor3 = theme:Get("TextMuted"),
         TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -1145,15 +829,8 @@ function Window:_build()
         self:Filter(self.SearchBox.Text)
     end)
 
-    self.BackButton.MouseButton1Click:Connect(function()
-        self:NavigateHistory(-1)
-    end)
-    self.ForwardButton.MouseButton1Click:Connect(function()
-        self:NavigateHistory(1)
-    end)
     self.MinimizeButton.MouseButton1Click:Connect(function()
-        self.State.Closed = false
-        self:SetVisible(false)
+        self:SetMinimized(not self.State.Minimized)
     end)
     self.MaximizeButton.MouseButton1Click:Connect(function()
         self:SetMaximized(not self.State.Maximized)
@@ -1162,63 +839,30 @@ function Window:_build()
         self:Destroy()
     end)
 
-    self.WindowScale = Instance.new("UIScale")
-    self.WindowScale.Scale = 1
-    self.WindowScale.Parent = self.Main
-
-    Utility.MakeDraggable(self.Main, self.Root)
-    self:UpdateNavigationButtons()
+    Utility.MakeDraggable(self.Topbar, self.Root)
     self:Open()
 end
 
 function Window:Open()
-    if self.State.Destroyed or not self.Root then
-        return
-    end
-
-    self.Root.Size = UDim2.fromOffset(self.DefaultSize.X.Offset - 70, self.DefaultSize.Y.Offset - 70)
+    self.Root.Size = UDim2.fromOffset(920, 580)
     self.Main.BackgroundTransparency = 1
-    self.Main.Position = UDim2.fromOffset(0, 10)
-    self.WindowScale.Scale = 0.965
-    self.State.Hidden = false
-
-    local shouldBlur = self.State.Blur and not self.State.ReopenWithoutBlur
     if self.BlurEffect then
-        Utility.FastTween(self.BlurEffect, {Size = shouldBlur and 16 or 0}, 0.3)
+        Utility.FastTween(self.BlurEffect, {Size = 16}, 0.3)
     end
-
-    Utility.FastTween(self.Root, {Size = self.DefaultSize}, 0.32)
-    Utility.FastTween(self.Main, {BackgroundTransparency = 0, Position = UDim2.fromOffset(0, 0)}, 0.26)
-    Utility.FastTween(self.WindowScale, {Scale = 1}, 0.28)
+    Utility.FastTween(self.Root, {Size = UDim2.fromOffset(980, 640)}, 0.28)
+    Utility.FastTween(self.Main, {BackgroundTransparency = 0}, 0.24)
 end
 
 function Window:SetVisible(state)
-    if self.State.Destroyed or not self.Root then
-        return
-    end
-
     self.State.Hidden = not state
     self.Root.Visible = true
 
-    local shouldBlur = state and self.State.Blur and not self.State.ReopenWithoutBlur
     if self.BlurEffect then
-        Utility.FastTween(self.BlurEffect, {Size = shouldBlur and 16 or 0}, 0.24)
+        Utility.FastTween(self.BlurEffect, {Size = state and 16 or 0}, 0.24)
     end
 
-    local targetSize = self.State.Maximized and self.MaximizedSize or self.DefaultSize
-    local tween = Utility.FastTween(self.Main, {
-        BackgroundTransparency = state and 0 or 1,
-        Position = state and UDim2.fromOffset(0, 0) or UDim2.fromOffset(0, 10),
-    }, 0.22)
-
-    Utility.FastTween(self.WindowScale, {Scale = state and 1 or 0.965}, 0.22)
-    Utility.FastTween(self.Root, {
-        Size = state and targetSize or UDim2.fromOffset(self.DefaultSize.X.Offset - 70, self.DefaultSize.Y.Offset - 70),
-    }, 0.24)
-
-    if state then
-        self.State.Closed = false
-    end
+    local tween = Utility.FastTween(self.Main, {BackgroundTransparency = state and 0 or 1}, 0.2)
+    Utility.FastTween(self.Root, {Size = state and UDim2.fromOffset(980, 640) or UDim2.fromOffset(920, 580)}, 0.22)
 
     if not state then
         tween.Completed:Connect(function()
@@ -1229,112 +873,35 @@ function Window:SetVisible(state)
     end
 end
 
-function Window:SetBlur(enabled)
-    self.State.Blur = enabled == true
-
-    if not self.State.Blur then
-        self.State.ReopenWithoutBlur = true
-        if self.BlurEffect then
-            Utility.FastTween(self.BlurEffect, {Size = 0}, 0.2)
-        end
-    elseif not self.State.Hidden and not self.State.Closed and self.BlurEffect then
-        self.State.ReopenWithoutBlur = false
-        Utility.FastTween(self.BlurEffect, {Size = 16}, 0.2)
-    end
-end
-
-function Window:Close()
-    self.State.Closed = true
-    self.State.ReopenWithoutBlur = not self.State.BlurAfterClose
-
-    if self.BlurEffect then
-        Utility.FastTween(self.BlurEffect, {Size = 0}, 0.2)
-    end
-
-    self:SetVisible(false)
-end
 function Window:SetMinimized(state)
-    if self.State.Destroyed or not self.Root then
-        return
-    end
-
     self.State.Minimized = state
-
-    if state then
-        self.State.Maximized = false
-        Utility.FastTween(self.Sidebar, {BackgroundTransparency = 1}, 0.16)
-        Utility.FastTween(self.ContentShell, {BackgroundTransparency = 1}, 0.16)
-        compatDelay(0.16, function()
-            if self.State.Minimized then
-                self.Sidebar.Visible = false
-                self.ContentShell.Visible = false
-            end
-        end)
-    else
-        self.Sidebar.Visible = true
-        self.ContentShell.Visible = true
-        Utility.FastTween(self.Sidebar, {BackgroundTransparency = 0}, 0.18)
-        Utility.FastTween(self.ContentShell, {BackgroundTransparency = 0}, 0.18)
-    end
-
-    Utility.FastTween(self.Root, {
-        Size = state and self.MinimizedSize or (self.State.Maximized and self.MaximizedSize or self.DefaultSize),
-    }, 0.26)
+    self.Sidebar.Visible = not state
+    self.ContentShell.Visible = not state
+    Utility.FastTween(self.Root, {Size = state and UDim2.fromOffset(980, 78) or UDim2.fromOffset(980, 640)}, 0.22)
 end
 
 function Window:SetMaximized(state)
-    if self.State.Destroyed or not self.Root then
-        return
-    end
-
     self.State.Maximized = state
-
-    if state and self.State.Minimized then
-        self.State.Minimized = false
-        self.Sidebar.Visible = true
-        self.ContentShell.Visible = true
-        Utility.FastTween(self.Sidebar, {BackgroundTransparency = 0}, 0.18)
-        Utility.FastTween(self.ContentShell, {BackgroundTransparency = 0}, 0.18)
-    end
-
-    Utility.FastTween(self.Root, {
-        Size = state and self.MaximizedSize or (self.State.Minimized and self.MinimizedSize or self.DefaultSize),
-    }, 0.28)
+    Utility.FastTween(self.Root, {Size = state and UDim2.fromScale(0.88, 0.86) or UDim2.fromOffset(980, 640)}, 0.24)
 end
 
 function Window:RefreshTheme()
     local theme = self.Theme
     self.Main.BackgroundColor3 = theme:Get("Background")
-    self.Topbar.BackgroundColor3 = theme:Get("SurfaceAlt")
     self.Sidebar.BackgroundColor3 = theme:Get("Sidebar")
     self.ContentShell.BackgroundColor3 = theme:Get("Surface")
     self.SearchBox.BackgroundColor3 = theme:Get("SurfaceAlt")
     self.SearchBox.TextColor3 = theme:Get("Text")
     self.SearchBox.PlaceholderColor3 = theme:Get("TextMuted")
 
-    if self.TitleLabel then
-        self.TitleLabel.TextColor3 = theme:Get("Text")
-    end
-    if self.SubtitleLabel then
-        self.SubtitleLabel.TextColor3 = theme:Get("TextMuted")
-    end
-
     for _, tab in ipairs(self.Tabs) do
         if tab.Selected then
-            tab.SidebarButton.BackgroundColor3 = theme:Get("AccentDark")
-                if tab.IsImageIcon then
-                    tab.IconLabel.ImageColor3 = theme:Get("Text")
-                else
-                    tab.IconLabel.TextColor3 = theme:Get("Text")
-                end
+            tab.Button.BackgroundColor3 = theme:Get("AccentDark")
+            tab.IconLabel.TextColor3 = theme:Get("Text")
             tab.NameLabel.TextColor3 = theme:Get("Text")
         else
-            tab.SidebarButton.BackgroundColor3 = theme:Get("SurfaceAlt")
-                if tab.IsImageIcon then
-                    tab.IconLabel.ImageColor3 = theme:Get("Accent")
-                else
-                    tab.IconLabel.TextColor3 = theme:Get("Accent")
-                end
+            tab.Button.BackgroundColor3 = theme:Get("SurfaceAlt")
+            tab.IconLabel.TextColor3 = theme:Get("Accent")
             tab.NameLabel.TextColor3 = theme:Get("TextMuted")
         end
     end
@@ -1374,9 +941,9 @@ function Window:ApplyConfig(config)
         local component = self.Components[id]
         if component and component.Set then
             local value = state.Value
-            if component.Kind == "Keybind" and compatTypeOf(value) == "string" then
+            if component.Kind == "Keybind" and typeof(value) == "string" then
                 value = Enum.KeyCode[value] or component.Value
-            elseif component.Kind == "ColorPicker" and compatTypeOf(value) == "table" then
+            elseif component.Kind == "ColorPicker" and typeof(value) == "table" then
                 value = Color3.new(value[1], value[2], value[3])
             end
             component:Set(value, true)
@@ -1394,69 +961,6 @@ function Window:LoadConfig(profile)
     return config
 end
 
-function Window:UpdateNavigationButtons()
-    if not self.BackButton or not self.ForwardButton then
-        return
-    end
-
-    local canGoBack = (self.HistoryIndex or 0) > 1
-    local canGoForward = (self.HistoryIndex or 0) < #(self.History or {})
-
-    self.BackButton.Active = canGoBack
-    self.ForwardButton.Active = canGoForward
-    self.BackButton.AutoButtonColor = false
-    self.ForwardButton.AutoButtonColor = false
-    self.BackButton.BackgroundTransparency = canGoBack and 0 or 0.28
-    self.ForwardButton.BackgroundTransparency = canGoForward and 0 or 0.28
-
-    if self.BackButton.IconLabel then
-        self.BackButton.IconLabel.TextTransparency = canGoBack and 0 or 0.55
-    end
-    if self.ForwardButton.IconLabel then
-        self.ForwardButton.IconLabel.TextTransparency = canGoForward and 0 or 0.55
-    end
-end
-
-function Window:_pushHistory(tab)
-    if self.SuppressHistory then
-        return
-    end
-
-    self.History = self.History or {}
-    self.HistoryIndex = self.HistoryIndex or 0
-
-    if self.History[self.HistoryIndex] == tab then
-        self:UpdateNavigationButtons()
-        return
-    end
-
-    for index = #self.History, self.HistoryIndex + 1, -1 do
-        self.History[index] = nil
-    end
-
-    table.insert(self.History, tab)
-    self.HistoryIndex = #self.History
-    self:UpdateNavigationButtons()
-end
-
-function Window:NavigateHistory(step)
-    self.History = self.History or {}
-    self.HistoryIndex = self.HistoryIndex or 0
-
-    local targetIndex = self.HistoryIndex + step
-    local targetTab = self.History[targetIndex]
-    if not targetTab then
-        self:UpdateNavigationButtons()
-        return
-    end
-
-    self.HistoryIndex = targetIndex
-    self.SuppressHistory = true
-    targetTab:Select()
-    self.SuppressHistory = false
-    self:UpdateNavigationButtons()
-end
-
 function Window:CreateTab(name, icon)
     local theme = self.Theme
     local tab = {
@@ -1467,48 +971,32 @@ function Window:CreateTab(name, icon)
         Selected = false,
     }
 
-    tab.SidebarButton = Utility.Create("TextButton", {
+    tab.Button = Utility.Create("TextButton", {
         AutoButtonColor = false,
         BackgroundColor3 = theme:Get("SurfaceAlt"),
         BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 28),
+        Size = UDim2.new(1, -2, 0, 42),
         Text = "",
         Parent = self.TabButtonHolder,
-        CornerRadius = UDim.new(0, 4),
+        CornerRadius = UDim.new(0, 12),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 1,
+            Transparency = 0.35,
             Thickness = 1,
         },
     })
 
-    local isImageIcon, iconSource = normalizeIconSource(tab.Icon)
-    tab.IsImageIcon = isImageIcon
-    tab.IconSource = iconSource
-
-    if isImageIcon then
-        tab.IconLabel = Utility.Create("ImageLabel", {
-            BackgroundTransparency = 1,
-            Position = UDim2.fromOffset(14, 14),
-            Size = UDim2.fromOffset(14, 14),
-            Image = iconSource,
-            ImageColor3 = theme:Get("Accent"),
-            ScaleType = Enum.ScaleType.Fit,
-            Parent = tab.SidebarButton,
-        })
-    else
-        tab.IconLabel = Utility.Create("TextLabel", {
-            BackgroundTransparency = 1,
-            Font = Enum.Font.GothamBold,
-            Position = UDim2.fromOffset(14, 0),
-            Size = UDim2.fromOffset(20, 42),
-            Text = tostring(tab.Icon),
-            TextColor3 = theme:Get("Accent"),
-            TextSize = 11,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = tab.SidebarButton,
-        })
-    end
+    tab.IconLabel = Utility.Create("TextLabel", {
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Position = UDim2.fromOffset(14, 0),
+        Size = UDim2.fromOffset(20, 42),
+        Text = tab.Icon,
+        TextColor3 = theme:Get("Accent"),
+        TextSize = 15,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = tab.Button,
+    })
 
     tab.NameLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
@@ -1517,25 +1005,22 @@ function Window:CreateTab(name, icon)
         Size = UDim2.new(1, -36, 1, 0),
         Text = name,
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 11,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = tab.SidebarButton,
+        Parent = tab.Button,
     })
 
-    Utility.Ripple(tab.SidebarButton, theme)
+    Utility.Ripple(tab.Button, theme)
 
     tab.Page = Utility.Create("ScrollingFrame", {
         Active = true,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         CanvasSize = UDim2.fromOffset(0, 0),
-        ScrollingDirection = Enum.ScrollingDirection.Y,
-        VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
-        ScrollBarImageColor3 = theme:Get("TextMuted"),
-        ScrollBarImageTransparency = 0.22,
-        ScrollBarThickness = 5,
-        Size = UDim2.new(1, -22, 1, -28),
-        Position = UDim2.fromOffset(16, 12),
+        ScrollBarImageColor3 = theme:Get("Accent"),
+        ScrollBarThickness = 4,
+        Size = UDim2.new(1, -28, 1, -28),
+        Position = UDim2.fromOffset(14, 14),
         Visible = false,
         Parent = self.ContentPages,
     })
@@ -1545,58 +1030,19 @@ function Window:CreateTab(name, icon)
     end)
 
     function tab:Select()
-        if self.Window.CurrentTab == self then
-            self.Window:UpdateNavigationButtons()
-            return
-        end
-
         for _, other in ipairs(self.Window.Tabs) do
-            if other == self then
-            else
-                other.Selected = false
-                other.SidebarButton.BackgroundColor3 = theme:Get("SurfaceAlt")
-                if other.IsImageIcon then
-                    other.IconLabel.ImageColor3 = theme:Get("Accent")
-                else
-                    other.IconLabel.TextColor3 = theme:Get("Accent")
-                end
-                other.NameLabel.TextColor3 = theme:Get("TextMuted")
-
-                if other.Page.Visible then
-                    local previousPage = other.Page
-                    Utility.FastTween(previousPage, {
-                        Position = UDim2.fromOffset(34, 14),
-                        ScrollBarImageTransparency = 1,
-                    }, 0.12, Enum.EasingStyle.Quad)
-                    compatDelay(0.12, function()
-                        if not other.Selected and previousPage then
-                            previousPage.Visible = false
-                            previousPage.Position = UDim2.fromOffset(14, 14)
-                        end
-                    end)
-                end
-            end
+            other.Selected = false
+            other.Page.Visible = false
+            other.Button.BackgroundColor3 = theme:Get("SurfaceAlt")
+            other.IconLabel.TextColor3 = theme:Get("Accent")
+            other.NameLabel.TextColor3 = theme:Get("TextMuted")
         end
 
         self.Selected = true
-        self.Window.CurrentTab = self
         self.Page.Visible = true
-        self.Page.Position = UDim2.fromOffset(-6, 14)
-        self.Page.ScrollBarImageTransparency = 1
-        self.SidebarButton.BackgroundColor3 = theme:Get("AccentDark")
-        if self.IsImageIcon then
-            self.IconLabel.ImageColor3 = theme:Get("Text")
-        else
-            self.IconLabel.TextColor3 = theme:Get("Text")
-        end
+        self.Button.BackgroundColor3 = theme:Get("AccentDark")
+        self.IconLabel.TextColor3 = theme:Get("Text")
         self.NameLabel.TextColor3 = theme:Get("Text")
-        Utility.FastTween(self.Page, {
-            Position = UDim2.fromOffset(16, 12),
-            ScrollBarImageTransparency = 0,
-        }, 0.16, Enum.EasingStyle.Quad)
-
-        self.Window:_pushHistory(self)
-        self.Window:UpdateNavigationButtons()
     end
 
     function tab:CreateSection(sectionName)
@@ -1612,17 +1058,17 @@ function Window:CreateTab(name, icon)
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 0, 0),
             Parent = self.Page,
-            CornerRadius = UDim.new(0, 0),
+            CornerRadius = UDim.new(0, 14),
             Stroke = {
                 Color = theme:Get("Border"),
-                Transparency = 1,
+                Transparency = 0.18,
                 Thickness = 1,
             },
             Padding = {
-                PaddingBottom = UDim.new(0, 8),
-                PaddingLeft = UDim.new(0, 18),
-                PaddingRight = UDim.new(0, 18),
-                PaddingTop = UDim.new(0, 8),
+                PaddingBottom = UDim.new(0, 14),
+                PaddingLeft = UDim.new(0, 14),
+                PaddingRight = UDim.new(0, 14),
+                PaddingTop = UDim.new(0, 14),
             },
         })
 
@@ -1632,7 +1078,7 @@ function Window:CreateTab(name, icon)
             Size = UDim2.new(1, 0, 0, 18),
             Text = sectionName,
             TextColor3 = theme:Get("Text"),
-            TextSize = 12,
+            TextSize = 14,
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = section.Frame,
         })
@@ -1656,47 +1102,23 @@ function Window:CreateTab(name, icon)
             return component
         end
 
-        local function baseElement(kind, labelText, callback, defaultValue, description)
+        local function baseElement(kind, labelText, callback, defaultValue)
             local id = string.format("%s_%s_%s", self.Name, sectionName, labelText):gsub("%W", "_")
-            local hasDescription = description ~= nil and description ~= ""
             local holder = Utility.Create("Frame", {
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, hasDescription and 50 or 34),
+                Size = UDim2.new(1, 0, 0, 48),
                 Parent = section.Frame,
             })
 
             local label = Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Font = Enum.Font.GothamMedium,
-                Position = UDim2.fromOffset(0, 0),
-                Size = UDim2.new(0.62, 0, 0, 14),
+                Position = UDim2.fromOffset(0, 2),
+                Size = UDim2.new(0.6, 0, 0, 16),
                 Text = labelText,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 12,
+                TextSize = 13,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = holder,
-            })
-
-            local descriptionLabel = Utility.Create("TextLabel", {
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                Position = UDim2.fromOffset(0, 16),
-                Size = UDim2.new(0.62, 0, 0, 14),
-                Text = description or "",
-                TextColor3 = theme:Get("TextMuted"),
-                TextSize = 10,
-                TextTransparency = hasDescription and 0 or 1,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = holder,
-            })
-
-            Utility.Create("Frame", {
-                AnchorPoint = Vector2.new(0, 1),
-                BackgroundColor3 = theme:Get("Border"),
-                BackgroundTransparency = 0.45,
-                BorderSizePixel = 0,
-                Position = UDim2.new(0, 0, 1, 0),
-                Size = UDim2.new(1, 0, 0, 1),
                 Parent = holder,
             })
 
@@ -1704,7 +1126,6 @@ function Window:CreateTab(name, icon)
                 Id = id,
                 Kind = kind,
                 Label = label,
-                DescriptionLabel = descriptionLabel,
                 Frame = holder,
                 SearchText = labelText,
                 Callback = callback,
@@ -1715,17 +1136,17 @@ function Window:CreateTab(name, icon)
 
         function section:CreateLabel(title, text)
             local component = baseElement("Label", title, nil, text)
-            component.Frame.Size = UDim2.new(1, 0, 0, 40)
+            component.Frame.Size = UDim2.new(1, 0, 0, 62)
             component.Label.Size = UDim2.new(1, 0, 0, 16)
 
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Font = Enum.Font.Gotham,
-                Position = UDim2.fromOffset(0, 16),
+                Position = UDim2.fromOffset(0, 22),
                 Size = UDim2.new(1, 0, 0, 34),
                 Text = text,
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 10,
+                TextSize = 12,
                 TextWrapped = true,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Top,
@@ -1743,267 +1164,20 @@ function Window:CreateTab(name, icon)
             return self:CreateLabel(title, text)
         end
 
-
-        function section:CreateCard(title, text, options)
-            options = options or {}
-            local id = string.format("%s_%s_%s", self.Name, sectionName, title or "Card"):gsub("%W", "_")
-            local buttonText = options.ButtonText
-            local tagText = options.Tag
-            local cardHeight = options.Height or (buttonText and 118 or 98)
-            local component = {
-                Id = id,
-                Kind = "Card",
-                Frame = Utility.Create("Frame", {
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 0, cardHeight),
-                    Parent = section.Frame,
-                }),
-                SearchText = string.format("%s %s %s", title or "Card", text or "", tagText or ""),
-                Value = false,
-                Set = function() end,
-            }
-
-            local card = Utility.Create("Frame", {
-                BackgroundColor3 = options.Color or theme:Get("Surface"),
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 1, -1),
-                Parent = component.Frame,
-                CornerRadius = UDim.new(0, 10),
-                Stroke = {
-                    Color = options.StrokeColor or theme:Get("Border"),
-                    Transparency = options.StrokeTransparency or 0.18,
-                    Thickness = 1,
-                },
-                Padding = {
-                    PaddingBottom = UDim.new(0, 12),
-                    PaddingLeft = UDim.new(0, 14),
-                    PaddingRight = UDim.new(0, 14),
-                    PaddingTop = UDim.new(0, 12),
-                },
-            })
-            Utility.NewListLayout(card, 6)
-
-            Utility.Create("Frame", {
-                BackgroundColor3 = options.AccentColor or theme:Get("Accent"),
-                BorderSizePixel = 0,
-                Size = UDim2.new(0, options.AccentWidth or 42, 0, 3),
-                Parent = card,
-                CornerRadius = UDim.new(1, 0),
-            })
-
-            Utility.Create("TextLabel", {
-                BackgroundTransparency = 1,
-                Font = Enum.Font.GothamBold,
-                Size = UDim2.new(1, 0, 0, 18),
-                Text = title or "Card",
-                TextColor3 = theme:Get("Text"),
-                TextSize = 12,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = card,
-            })
-
-            Utility.Create("TextLabel", {
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                Size = UDim2.new(1, 0, 0, buttonText and 34 or 44),
-                Text = text or "",
-                TextColor3 = theme:Get("TextMuted"),
-                TextSize = 10,
-                TextWrapped = true,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextYAlignment = Enum.TextYAlignment.Top,
-                Parent = card,
-            })
-
-            if tagText and tagText ~= "" then
-                Utility.Create("TextLabel", {
-                    BackgroundTransparency = 1,
-                    Font = Enum.Font.GothamBold,
-                    Size = UDim2.new(1, 0, 0, 14),
-                    Text = tagText,
-                    TextColor3 = options.TagColor or theme:Get("Accent"),
-                    TextSize = 9,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = card,
-                })
-            end
-
-            if buttonText then
-                local actionButton = Utility.Create("TextButton", {
-                    AutoButtonColor = false,
-                    BackgroundColor3 = options.ButtonColor or theme:Get("AccentDark"),
-                    BorderSizePixel = 0,
-                    Size = UDim2.fromOffset(options.ButtonWidth or 116, 28),
-                    Text = buttonText,
-                    Font = Enum.Font.GothamBold,
-                    TextColor3 = theme:Get("Text"),
-                    TextSize = 10,
-                    Parent = card,
-                    CornerRadius = UDim.new(0, 6),
-                })
-                Utility.Ripple(actionButton, theme)
-                actionButton.MouseButton1Click:Connect(function()
-                    if options.Callback then
-                        options.Callback()
-                    end
-                end)
-            end
-
-            function component:GetSerialized()
-                return {Value = false}
-            end
-
-            return registerComponent(component)
-        end
-        function section:CreateImage(labelText, imageSource, options)
-            options = options or {}
-            local component = baseElement("Image", labelText or "Image", nil, imageSource, options.Description)
-            component.Frame.Size = UDim2.new(1, 0, 0, (options.Description and options.Description ~= "") and 164 or 148)
-
-            local image = Utility.Create("ImageLabel", {
-                BackgroundColor3 = theme:Get("Surface"),
-                BorderSizePixel = 0,
-                Position = UDim2.fromOffset(0, component.DescriptionLabel.TextTransparency == 0 and 34 or 18),
-                Size = UDim2.new(1, 0, 0, options.Height or 112),
-                Image = imageSource or "",
-                ScaleType = Enum.ScaleType.Crop,
-                Parent = component.Frame,
-                CornerRadius = UDim.new(0, 8),
-                Stroke = {
-                    Color = theme:Get("Border"),
-                    Transparency = 0.22,
-                    Thickness = 1,
-                },
-            })
-
-            function component:Set(value)
-                component.Value = value
-                image.Image = value or ""
-            end
-
-            function component:GetSerialized()
-                return {Value = self.Value}
-            end
-
-            return registerComponent(component)
-        end
-
-        function section:CreateBanner(labelText, imageSource, options)
-            options = options or {}
-            local component = baseElement("Banner", labelText or "Banner", nil, imageSource, options.Description)
-            component.Frame.Size = UDim2.new(1, 0, 0, 176)
-
-            local card = Utility.Create("Frame", {
-                BackgroundColor3 = theme:Get("Surface"),
-                BorderSizePixel = 0,
-                Position = UDim2.fromOffset(0, 26),
-                Size = UDim2.new(1, 0, 0, 140),
-                Parent = component.Frame,
-                CornerRadius = UDim.new(0, 8),
-                Stroke = {
-                    Color = theme:Get("Border"),
-                    Transparency = 0.22,
-                    Thickness = 1,
-                },
-            })
-
-            local bannerImage = Utility.Create("ImageLabel", {
-                BackgroundColor3 = theme:Get("SurfaceAlt"),
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 78),
-                Image = imageSource or "",
-                ScaleType = Enum.ScaleType.Crop,
-                Parent = card,
-                CornerRadius = UDim.new(0, 8),
-            })
-
-            Utility.Create("Frame", {
-                BackgroundColor3 = theme:Get("Surface"),
-                BorderSizePixel = 0,
-                Position = UDim2.new(0, 0, 1, -8),
-                Size = UDim2.new(1, 0, 0, 8),
-                Parent = bannerImage,
-            })
-
-            local title = Utility.Create("TextLabel", {
-                BackgroundTransparency = 1,
-                Font = Enum.Font.GothamBold,
-                Position = UDim2.fromOffset(12, 86),
-                Size = UDim2.new(1, -124, 0, 16),
-                Text = options.Title or labelText or "Banner",
-                TextColor3 = theme:Get("Text"),
-                TextSize = 11,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = card,
-            })
-
-            local description = Utility.Create("TextLabel", {
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                Position = UDim2.fromOffset(12, 102),
-                Size = UDim2.new(1, -124, 0, 26),
-                Text = options.Description or "",
-                TextColor3 = theme:Get("TextMuted"),
-                TextSize = 10,
-                TextWrapped = true,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextYAlignment = Enum.TextYAlignment.Top,
-                Parent = card,
-            })
-
-            local action = Utility.Create("TextButton", {
-                AutoButtonColor = false,
-                BackgroundColor3 = options.ButtonColor or theme:Get("AccentDark"),
-                BorderSizePixel = 0,
-                AnchorPoint = Vector2.new(1, 1),
-                Position = UDim2.new(1, -12, 1, -12),
-                Size = UDim2.fromOffset(100, 28),
-                Text = options.ButtonText or "Open",
-                Font = Enum.Font.GothamBold,
-                TextColor3 = theme:Get("Text"),
-                TextSize = 10,
-                Parent = card,
-                CornerRadius = UDim.new(0, 6),
-            })
-            Utility.Ripple(action, theme)
-
-            if type(options.Callback) == "function" then
-                action.MouseButton1Click:Connect(function()
-                    options.Callback()
-                end)
-            end
-
-            function component:Set(value)
-                component.Value = value
-                bannerImage.Image = value or ""
-            end
-
-            function component:GetSerialized()
-                return {Value = self.Value}
-            end
-
-            component.Card = card
-            component.Image = bannerImage
-            component.Title = title
-            component.Description = description
-            component.Button = action
-
-            return registerComponent(component)
-        end
         function section:CreateButton(labelText, callback, tooltip)
-            local component = baseElement("Button", labelText, callback, false, tooltip)
+            local component = baseElement("Button", labelText, callback, false)
             local button = Utility.Create("TextButton", {
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("AccentDark"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -112, 0, 5),
-                Size = UDim2.fromOffset(112, 24),
-                Text = labelText,
+                Position = UDim2.new(1, -150, 0, 0),
+                Size = UDim2.fromOffset(150, 38),
+                Text = "Execute",
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 10,
+                TextSize = 13,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 5),
+                CornerRadius = UDim.new(0, 10),
             })
             Utility.Ripple(button, theme)
 
@@ -2025,13 +1199,13 @@ function Window:CreateTab(name, icon)
         end
 
         function section:CreateToggle(labelText, callback, defaultValue, tooltip)
-            local component = baseElement("Toggle", labelText, callback, defaultValue or false, tooltip)
+            local component = baseElement("Toggle", labelText, callback, defaultValue or false)
             local pill = Utility.Create("TextButton", {
                 AutoButtonColor = false,
-                BackgroundColor3 = component.Value and theme:Get("Accent") or Color3.fromRGB(82, 82, 86),
+                BackgroundColor3 = component.Value and theme:Get("Accent") or theme:Get("Border"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -38, 0, 15),
-                Size = UDim2.fromOffset(30, 16),
+                Position = UDim2.new(1, -58, 0, 6),
+                Size = UDim2.fromOffset(58, 26),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(1, 0),
@@ -2039,16 +1213,16 @@ function Window:CreateTab(name, icon)
             local knob = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 BorderSizePixel = 0,
-                Position = component.Value and UDim2.fromOffset(16, 2) or UDim2.fromOffset(2, 2),
-                Size = UDim2.fromOffset(14, 14),
+                Position = component.Value and UDim2.fromOffset(34, 3) or UDim2.fromOffset(3, 3),
+                Size = UDim2.fromOffset(20, 20),
                 Parent = pill,
                 CornerRadius = UDim.new(1, 0),
             })
 
             local function apply(state, silent)
                 component.Value = state
-                Utility.FastTween(pill, {BackgroundColor3 = state and theme:Get("Accent") or Color3.fromRGB(82, 82, 86)}, 0.18)
-                Utility.FastTween(knob, {Position = state and UDim2.fromOffset(18, 2) or UDim2.fromOffset(2, 2)}, 0.18)
+                Utility.FastTween(pill, {BackgroundColor3 = state and theme:Get("Accent") or theme:Get("Border")}, 0.18)
+                Utility.FastTween(knob, {Position = state and UDim2.fromOffset(34, 3) or UDim2.fromOffset(3, 3)}, 0.18)
                 if callback and not silent then
                     callback(state)
                 end
@@ -2074,53 +1248,33 @@ function Window:CreateTab(name, icon)
             options = options or {}
             local min = options.Min or 0
             local max = options.Max or 100
-            local component = baseElement("Slider", labelText, callback, options.Default or min, options.Description)
-            component.Frame.Size = UDim2.new(1, 0, 0, component.DescriptionLabel.TextTransparency == 0 and 52 or 36)
+            local component = baseElement("Slider", labelText, callback, options.Default or min)
+            component.Frame.Size = UDim2.new(1, 0, 0, 60)
 
             local valueLabel = Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Font = Enum.Font.GothamBold,
-                Position = UDim2.new(0, 96, 0, 0),
-                Size = UDim2.fromOffset(52, 14),
-                Text = "(" .. Utility.FormatValue(component.Value) .. ")",
-                TextColor3 = theme:Get("TextMuted"),
-                TextSize = 10,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = component.Frame,
-            })
-
-            local sliderHitbox = Utility.Create("TextButton", {
-                AutoButtonColor = false,
-                BackgroundTransparency = 1,
-                BorderSizePixel = 0,
-                Position = UDim2.new(1, -158, 0, 9),
-                Size = UDim2.fromOffset(136, 24),
-                Text = "",
+                Position = UDim2.new(1, -64, 0, 0),
+                Size = UDim2.fromOffset(64, 16),
+                Text = Utility.FormatValue(component.Value),
+                TextColor3 = theme:Get("Accent"),
+                TextSize = 12,
+                TextXAlignment = Enum.TextXAlignment.Right,
                 Parent = component.Frame,
             })
 
             local track = Utility.Create("Frame", {
-                BackgroundColor3 = Color3.fromRGB(82, 82, 86),
+                BackgroundColor3 = theme:Get("Border"),
                 BorderSizePixel = 0,
-                AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.fromScale(0.5, 0.5),
-                Size = UDim2.fromOffset(126, 5),
-                Parent = sliderHitbox,
+                Position = UDim2.fromOffset(0, 30),
+                Size = UDim2.new(1, 0, 0, 8),
+                Parent = component.Frame,
                 CornerRadius = UDim.new(1, 0),
             })
             local fill = Utility.Create("Frame", {
                 BackgroundColor3 = theme:Get("Accent"),
                 BorderSizePixel = 0,
                 Size = UDim2.new((component.Value - min) / (max - min), 0, 1, 0),
-                Parent = track,
-                CornerRadius = UDim.new(1, 0),
-            })
-            local knob = Utility.Create("Frame", {
-                AnchorPoint = Vector2.new(0.5, 0.5),
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                BorderSizePixel = 0,
-                Position = UDim2.new((component.Value - min) / (max - min), 0, 0.5, 0),
-                Size = UDim2.fromOffset(10, 10),
                 Parent = track,
                 CornerRadius = UDim.new(1, 0),
             })
@@ -2131,15 +1285,13 @@ function Window:CreateTab(name, icon)
                 local value = min + ((max - min) * ratio)
                 if options.Rounding then
                     local factor = 10 ^ options.Rounding
-                    value = compatRound(value * factor) / factor
+                    value = math.round(value * factor) / factor
                 else
                     value = math.floor(value + 0.5)
                 end
                 component.Value = value
-                local alpha = (value - min) / (max - min)
-                fill.Size = UDim2.new(alpha, 0, 1, 0)
-                knob.Position = UDim2.new(alpha, 0, 0.5, 0)
-                valueLabel.Text = "(" .. Utility.FormatValue(value) .. ")"
+                fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                valueLabel.Text = Utility.FormatValue(value)
                 if callback and not silent then
                     callback(value)
                 end
@@ -2149,7 +1301,7 @@ function Window:CreateTab(name, icon)
                 setFromRatio((value - min) / (max - min), silent)
             end
 
-            sliderHitbox.InputBegan:Connect(function(input)
+            track.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = true
                     setFromRatio((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X)
@@ -2185,7 +1337,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(220, 38),
                 Text = "",
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 8),
+                CornerRadius = UDim.new(0, 10),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -2199,7 +1351,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(1, -36, 1, 0),
                 Text = multi and "Select..." or tostring(component.Value),
                 TextColor3 = theme:Get("Text"),
-                TextSize = 10,
+                TextSize = 12,
                 TextTruncate = Enum.TextTruncate.AtEnd,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = button,
@@ -2211,7 +1363,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(16, 38),
                 Text = "v",
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 10,
+                TextSize = 12,
                 Parent = button,
             })
 
@@ -2222,7 +1374,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(1, 0, 0, 0),
                 Visible = false,
                 Parent = button,
-                CornerRadius = UDim.new(0, 8),
+                CornerRadius = UDim.new(0, 10),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.2,
@@ -2266,7 +1418,7 @@ function Window:CreateTab(name, icon)
                 menu.Visible = true
                 Utility.FastTween(menu, {Size = state and UDim2.new(1, 0, 0, math.min(#list * 30 + 8, 154)) or UDim2.new(1, 0, 0, 0)}, 0.16)
                 if not state then
-                    compatDelay(0.17, function()
+                    task.delay(0.17, function()
                         if not open then
                             menu.Visible = false
                         end
@@ -2279,11 +1431,11 @@ function Window:CreateTab(name, icon)
                     AutoButtonColor = false,
                     BackgroundColor3 = theme:Get("SurfaceAlt"),
                     BorderSizePixel = 0,
-                    Size = UDim2.new(1, 0, 0, 22),
+                    Size = UDim2.new(1, 0, 0, 26),
                     Text = value,
                     Font = Enum.Font.Gotham,
                     TextColor3 = theme:Get("Text"),
-                    TextSize = 10,
+                    TextSize = 12,
                     Parent = menuList,
                     CornerRadius = UDim.new(0, 8),
                 })
@@ -2355,9 +1507,9 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(220, 38),
                 Text = "",
                 TextColor3 = theme:Get("Text"),
-                TextSize = 10,
+                TextSize = 12,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 8),
+                CornerRadius = UDim.new(0, 10),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -2403,9 +1555,9 @@ function Window:CreateTab(name, icon)
                 Text = component.Value.Name,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 10,
+                TextSize = 12,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 8),
+                CornerRadius = UDim.new(0, 10),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -2462,7 +1614,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(58, 38),
                 Text = "",
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 8),
+                CornerRadius = UDim.new(0, 10),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.25,
@@ -2477,7 +1629,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(230, 0),
                 Visible = false,
                 Parent = component.Frame,
-                CornerRadius = UDim.new(0, 4),
+                CornerRadius = UDim.new(0, 12),
                 Stroke = {
                     Color = theme:Get("Border"),
                     Transparency = 0.2,
@@ -2500,7 +1652,7 @@ function Window:CreateTab(name, icon)
                 Image = "rbxassetid://4155801252",
                 Size = UDim2.fromOffset(210, 120),
                 Parent = popup,
-                CornerRadius = UDim.new(0, 8),
+                CornerRadius = UDim.new(0, 10),
             })
             local colorCursor = Utility.Create("Frame", {
                 AnchorPoint = Vector2.new(0.5, 0.5),
@@ -2563,7 +1715,7 @@ function Window:CreateTab(name, icon)
                 popup.Visible = true
                 Utility.FastTween(popup, {Size = state and UDim2.fromOffset(230, 178) or UDim2.fromOffset(230, 0)}, 0.18)
                 if not state then
-                    compatDelay(0.19, function()
+                    task.delay(0.19, function()
                         if not open then
                             popup.Visible = false
                         end
@@ -2622,144 +1774,11 @@ function Window:CreateTab(name, icon)
             return registerComponent(component)
         end
 
-        function section:Label(...)
-            return self:CreateLabel(...)
-        end
-
-        function section:Paragraph(...)
-            return self:CreateParagraph(...)
-        end
-
-        function section:Card(...)
-            return self:CreateCard(...)
-        end
-
-        function section:Button(...)
-            return self:CreateButton(...)
-        end
-
-        function section:Toggle(...)
-            return self:CreateToggle(...)
-        end
-
-        function section:Slider(labelText, min, max, defaultValue, callback)
-            if type(min) == "table" then
-                return self:CreateSlider(labelText, min, max)
-            end
-
-            return self:CreateSlider(labelText, {
-                Min = min or 0,
-                Max = max or 100,
-                Default = defaultValue or min or 0,
-            }, callback)
-        end
-
-        function section:Dropdown(...)
-            return self:CreateDropdown(...)
-        end
-
-        function section:MultiDropdown(...)
-            return self:CreateMultiDropdown(...)
-        end
-
-        function section:Textbox(...)
-            return self:CreateTextbox(...)
-        end
-
-        function section:Keybind(...)
-            return self:CreateKeybind(...)
-        end
-
-        function section:ColorPicker(...)
-            return self:CreateColorPicker(...)
-        end
-
-
-        function section:Image(...)
-            return self:CreateImage(...)
-        end
-
-        function section:Banner(...)
-            return self:CreateBanner(...)
-        end
         table.insert(self.Sections, section)
         return section
     end
 
-    function tab:_ensureSection()
-        if not self._defaultSection then
-            self._defaultSection = self:CreateSection("General")
-        end
-
-        return self._defaultSection
-    end
-
-    function tab:Section(name)
-        return self:CreateSection(name or "General")
-    end
-
-    function tab:Card(title, text, options)
-        return self:_ensureSection():Card(title or "Card", text or "", options or {})
-    end
-
-    function tab:Button(labelText, callback, tooltip)
-        return self:_ensureSection():Button(labelText or "Button", callback, tooltip)
-    end
-
-    function tab:Toggle(labelText, defaultValue, callback, tooltip)
-        if type(defaultValue) == "function" and callback == nil then
-            callback = defaultValue
-            defaultValue = false
-        end
-
-        return self:_ensureSection():Toggle(labelText or "Toggle", callback, defaultValue or false, tooltip)
-    end
-
-    function tab:Slider(labelText, min, max, defaultValue, callback)
-        if type(min) == "table" then
-            return self:_ensureSection():Slider(labelText or "Slider", min, max)
-        end
-
-        return self:_ensureSection():Slider(labelText or "Slider", min or 0, max or 100, defaultValue or min or 0, callback)
-    end
-
-    function tab:Dropdown(labelText, values, callback)
-        return self:_ensureSection():Dropdown(labelText or "Dropdown", values or {}, callback)
-    end
-
-    function tab:MultiDropdown(labelText, values, callback)
-        return self:_ensureSection():MultiDropdown(labelText or "Multi Dropdown", values or {}, callback)
-    end
-
-    function tab:Textbox(labelText, placeholder, callback)
-        return self:_ensureSection():Textbox(labelText or "Textbox", placeholder or "Enter text", callback)
-    end
-
-    function tab:Keybind(labelText, defaultKey, callback)
-        return self:_ensureSection():Keybind(labelText or "Keybind", defaultKey or Enum.KeyCode.E, callback)
-    end
-
-
-    function tab:Image(labelText, imageSource, options)
-        return self:_ensureSection():Image(labelText or "Image", imageSource or "", options or {})
-    end
-
-    function tab:Banner(labelText, imageSource, options)
-        return self:_ensureSection():Banner(labelText or "Banner", imageSource or "", options or {})
-    end
-    function tab:ColorPicker(labelText, defaultColor, callback)
-        return self:_ensureSection():ColorPicker(labelText or "Color Picker", defaultColor or theme:Get("Accent"), callback)
-    end
-
-    function tab:Label(title, text)
-        return self:_ensureSection():Label(title or "Label", text or "")
-    end
-
-    function tab:Paragraph(title, text)
-        return self:_ensureSection():Paragraph(title or "Paragraph", text or "")
-    end
-
-    tab.SidebarButton.MouseButton1Click:Connect(function()
+    tab.Button.MouseButton1Click:Connect(function()
         tab:Select()
     end)
 
@@ -2771,20 +1790,12 @@ function Window:CreateTab(name, icon)
     return tab
 end
 
-function Window:Tab(name, icon)
-    return self:CreateTab(name, icon)
-end
-
 function Window:Destroy()
-    self.State.Closed = true
-    self.State.Hidden = true
-    self.State.Destroyed = true
     if self.BlurEffect then
         Utility.FastTween(self.BlurEffect, {Size = 0}, 0.2)
     end
     if self.Root then
         self.Root:Destroy()
-        self.Root = nil
     end
 end
 
@@ -2794,6 +1805,13 @@ end)()
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
+
+local Theme = require(script.Theme)
+local Utility = require(script.Utility)
+local Config = require(script.Config)
+local Keybinds = require(script.Keybinds)
+local Notifications = require(script.Notifications)
+local Window = require(script.Window)
 
 local Library = {}
 Library.__index = Library
@@ -2806,11 +1824,8 @@ local function createGuiParent()
         return playerGui
     end
 
-    if type(gethui) == "function" then
-        local ok, result = pcall(gethui)
-        if ok and result then
-            return result
-        end
+    if gethui then
+        return gethui()
     end
 
     return game:GetService("CoreGui")
@@ -2844,20 +1859,10 @@ function Library:_ensureGui()
     screenGui.Parent = self.GuiParent
 
     self.ScreenGui = screenGui
-    local notificationOk, notificationObject = pcall(Notifications.new, self, screenGui)
-    if notificationOk and type(notificationObject) == "table" then
-        self.Notifications = notificationObject
-    else
-        self.Notifications = {
-            Notify = function()
-            end,
-        }
-    end
+    self.Notifications = Notifications.new(self, screenGui)
     self.Keybinds:BindLibraryToggle(Enum.KeyCode.RightShift, function()
         for _, window in ipairs(self.Windows) do
-            if window and window.Root and not window.State.Destroyed then
-                window:SetVisible(window.State.Hidden)
-            end
+            window:SetVisible(window.State.Hidden)
         end
     end)
 end
@@ -2865,61 +1870,22 @@ end
 function Library:CreateWindow(title, options)
     self:_ensureGui()
 
-    local ok, window = pcall(Window.new, self, title or "ProjectPulse", options or {})
-    if ok and type(window) == "table" then
-        table.insert(self.Windows, window)
-        return window
-    end
+    local window = Window.new(self, title or "ProjectPulse", options or {})
+    table.insert(self.Windows, window)
 
-    return {
-        State = {
-            Hidden = false,
-            Minimized = false,
-            Maximized = false,
-        },
-        CreateTab = function()
-            return {
-                CreateSection = function()
-                    return {}
-                end,
-            }
-        end,
-        Tab = function(self, ...)
-            return self:CreateTab(...)
-        end,
-        SetVisible = function()
-        end,
-        RefreshTheme = function()
-        end,
-        SaveConfig = function()
-            return false
-        end,
-        LoadConfig = function()
-            return nil
-        end,
-        Destroy = function()
-        end,
-    }
-end
-
-function Library:Window(title, options)
-    return self:CreateWindow(title, options)
+    return window
 end
 
 function Library:Notify(options)
     self:_ensureGui()
-    if self.Notifications and type(self.Notifications.Notify) == "function" then
-        pcall(self.Notifications.Notify, self.Notifications, options)
-    end
+    self.Notifications:Notify(options)
 end
 
 function Library:SetTheme(overrides)
     self.Theme:Apply(overrides)
 
     for _, window in ipairs(self.Windows) do
-        if window and type(window.RefreshTheme) == "function" then
-            pcall(window.RefreshTheme, window)
-        end
+        window:RefreshTheme()
     end
 end
 
@@ -2939,24 +1905,6 @@ function Library:Decode(value)
     return HttpService:JSONDecode(value)
 end
 
-local function createLibrary()
-    local ok, libraryObject = pcall(Library.new)
-    if ok and type(libraryObject) == "table" then
-        libraryObject.new = createLibrary
-        return libraryObject
-    end
-
-    local fallback = {
-        Theme = Theme.new(),
-        Utility = Utility,
-        Config = Config.new("ProjectPulse"),
-        Keybinds = Keybinds.new(),
-        Windows = {},
-    }
-
-    fallback.new = createLibrary
-    setmetatable(fallback, {__index = Library})
-    return fallback
+return function()
+    return Library.new()
 end
-
-return createLibrary()
