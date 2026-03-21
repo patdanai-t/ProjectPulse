@@ -1,4 +1,83 @@
-﻿local Theme = (function()
+local compatUnpack = table.unpack or unpack
+local compatTypeOf = typeof or type
+local compatRound = math.round or function(value)
+    if value >= 0 then
+        return math.floor(value + 0.5)
+    end
+    return math.ceil(value - 0.5)
+end
+
+local function safeTableClone(source)
+    local copy = {}
+    if type(source) ~= "table" then
+        return copy
+    end
+    for key, value in pairs(source) do
+        copy[key] = value
+    end
+    return copy
+end
+
+local function safeAssign(target, key, value)
+    pcall(function()
+        target[key] = value
+    end)
+end
+
+local function compatDelay(duration, callback, ...)
+    if type(callback) ~= "function" then
+        return nil
+    end
+
+    local args = {...}
+    local taskLibrary = rawget(_G, "task")
+    if taskLibrary and type(taskLibrary.delay) == "function" then
+        return taskLibrary.delay(duration, callback, compatUnpack(args))
+    end
+
+    if type(delay) == "function" then
+        return delay(duration, function()
+            callback(compatUnpack(args))
+        end)
+    end
+
+    local waitFunction = (taskLibrary and type(taskLibrary.wait) == "function" and taskLibrary.wait) or wait
+    return coroutine.wrap(function()
+        if type(waitFunction) == "function" then
+            waitFunction(duration)
+        end
+        callback(compatUnpack(args))
+    end)()
+end
+
+local function findAncestorOfClass(instance, className)
+    if not instance then
+        return nil
+    end
+
+    if type(instance.FindFirstAncestorOfClass) == "function" then
+        local ok, result = pcall(instance.FindFirstAncestorOfClass, instance, className)
+        if ok and result then
+            return result
+        end
+    end
+
+    local current = instance.Parent
+    while current do
+        local matches = current.ClassName == className
+        if not matches and type(current.IsA) == "function" then
+            local ok, result = pcall(current.IsA, current, className)
+            matches = ok and result or false
+        end
+        if matches then
+            return current
+        end
+        current = current.Parent
+    end
+
+    return nil
+end
+local Theme = (function()
 local Theme = {}
 Theme.__index = Theme
 
@@ -21,7 +100,7 @@ local DEFAULT = {
 
 function Theme.new()
     local self = setmetatable({}, Theme)
-    self.Values = table.clone(DEFAULT)
+    self.Values = safeTableClone(DEFAULT)
     return self
 end
 
@@ -51,7 +130,7 @@ function Utility.Create(className, properties)
 
     for key, value in pairs(properties or {}) do
         if key ~= "Children" and key ~= "CornerRadius" and key ~= "Stroke" and key ~= "Gradient" and key ~= "Padding" then
-            instance[key] = value
+            safeAssign(instance, key, value)
         end
     end
 
@@ -64,7 +143,7 @@ function Utility.Create(className, properties)
     if properties and properties.Stroke then
         local stroke = Instance.new("UIStroke")
         for key, value in pairs(properties.Stroke) do
-            stroke[key] = value
+            safeAssign(stroke, key, value)
         end
         stroke.Parent = instance
     end
@@ -72,7 +151,7 @@ function Utility.Create(className, properties)
     if properties and properties.Gradient then
         local gradient = Instance.new("UIGradient")
         for key, value in pairs(properties.Gradient) do
-            gradient[key] = value
+            safeAssign(gradient, key, value)
         end
         gradient.Parent = instance
     end
@@ -80,7 +159,7 @@ function Utility.Create(className, properties)
     if properties and properties.Padding then
         local padding = Instance.new("UIPadding")
         for key, value in pairs(properties.Padding) do
-            padding[key] = value
+            safeAssign(padding, key, value)
         end
         padding.Parent = instance
     end
@@ -95,9 +174,28 @@ function Utility.Create(className, properties)
 end
 
 function Utility.Tween(instance, info, properties)
-    local tween = TweenService:Create(instance, info, properties)
-    tween:Play()
-    return tween
+    local ok, tween = pcall(function()
+        return TweenService:Create(instance, info, properties)
+    end)
+
+    if ok and tween then
+        tween:Play()
+        return tween
+    end
+
+    for key, value in pairs(properties or {}) do
+        safeAssign(instance, key, value)
+    end
+
+    return {
+        Completed = {
+            Connect = function(_, callback)
+                if type(callback) == "function" then
+                    callback()
+                end
+            end,
+        },
+    }
 end
 
 function Utility.FastTween(instance, properties, time, style, direction)
@@ -172,11 +270,14 @@ function Utility.MakeDraggable(handle, root)
         )
     end)
 
-    root.Destroying:Connect(function()
-        if connection then
-            connection:Disconnect()
-        end
-    end)
+    local destroyingSignal = root.Destroying
+    if destroyingSignal and destroyingSignal.Connect then
+        destroyingSignal:Connect(function()
+            if connection then
+                connection:Disconnect()
+            end
+        end)
+    end
 end
 
 function Utility.Ripple(button, theme)
@@ -212,7 +313,7 @@ function Utility.Ripple(button, theme)
 end
 
 function Utility.Tooltip(target, text, theme)
-    local root = target:FindFirstAncestorOfClass("ScreenGui")
+    local root = findAncestorOfClass(target, "ScreenGui")
     if not root then
         return
     end
@@ -511,7 +612,7 @@ function Notifications:Notify(options)
     Utility.FastTween(card, {Position = UDim2.fromOffset(0, 0), BackgroundTransparency = 0.04}, 0.26)
     Utility.FastTween(bar, {Size = UDim2.new(0, 0, 0, 3)}, options.Duration or 3, Enum.EasingStyle.Linear)
 
-    task.delay(options.Duration or 3, function()
+    compatDelay(options.Duration or 3, function()
         if not card.Parent then
             return
         end
@@ -917,9 +1018,9 @@ function Window:ApplyConfig(config)
         local component = self.Components[id]
         if component and component.Set then
             local value = state.Value
-            if component.Kind == "Keybind" and typeof(value) == "string" then
+            if component.Kind == "Keybind" and compatTypeOf(value) == "string" then
                 value = Enum.KeyCode[value] or component.Value
-            elseif component.Kind == "ColorPicker" and typeof(value) == "table" then
+            elseif component.Kind == "ColorPicker" and compatTypeOf(value) == "table" then
                 value = Color3.new(value[1], value[2], value[3])
             end
             component:Set(value, true)
@@ -1261,7 +1362,7 @@ function Window:CreateTab(name, icon)
                 local value = min + ((max - min) * ratio)
                 if options.Rounding then
                     local factor = 10 ^ options.Rounding
-                    value = math.round(value * factor) / factor
+                    value = compatRound(value * factor) / factor
                 else
                     value = math.floor(value + 0.5)
                 end
@@ -1394,7 +1495,7 @@ function Window:CreateTab(name, icon)
                 menu.Visible = true
                 Utility.FastTween(menu, {Size = state and UDim2.new(1, 0, 0, math.min(#list * 30 + 8, 154)) or UDim2.new(1, 0, 0, 0)}, 0.16)
                 if not state then
-                    task.delay(0.17, function()
+                    compatDelay(0.17, function()
                         if not open then
                             menu.Visible = false
                         end
@@ -1691,7 +1792,7 @@ function Window:CreateTab(name, icon)
                 popup.Visible = true
                 Utility.FastTween(popup, {Size = state and UDim2.fromOffset(230, 178) or UDim2.fromOffset(230, 0)}, 0.18)
                 if not state then
-                    task.delay(0.19, function()
+                    compatDelay(0.19, function()
                         if not open then
                             popup.Visible = false
                         end
@@ -1793,8 +1894,11 @@ local function createGuiParent()
         return playerGui
     end
 
-    if gethui then
-        return gethui()
+    if type(gethui) == "function" then
+        local ok, result = pcall(gethui)
+        if ok and result then
+            return result
+        end
     end
 
     return game:GetService("CoreGui")
@@ -1828,7 +1932,15 @@ function Library:_ensureGui()
     screenGui.Parent = self.GuiParent
 
     self.ScreenGui = screenGui
-    self.Notifications = Notifications.new(self, screenGui)
+    local notificationOk, notificationObject = pcall(Notifications.new, self, screenGui)
+    if notificationOk and type(notificationObject) == "table" then
+        self.Notifications = notificationObject
+    else
+        self.Notifications = {
+            Notify = function()
+            end,
+        }
+    end
     self.Keybinds:BindLibraryToggle(Enum.KeyCode.RightShift, function()
         for _, window in ipairs(self.Windows) do
             window:SetVisible(window.State.Hidden)
@@ -1839,22 +1951,54 @@ end
 function Library:CreateWindow(title, options)
     self:_ensureGui()
 
-    local window = Window.new(self, title or "ProjectPulse", options or {})
-    table.insert(self.Windows, window)
+    local ok, window = pcall(Window.new, self, title or "ProjectPulse", options or {})
+    if ok and type(window) == "table" then
+        table.insert(self.Windows, window)
+        return window
+    end
 
-    return window
+    return {
+        State = {
+            Hidden = false,
+            Minimized = false,
+            Maximized = false,
+        },
+        CreateTab = function()
+            return {
+                CreateSection = function()
+                    return {}
+                end,
+            }
+        end,
+        SetVisible = function()
+        end,
+        RefreshTheme = function()
+        end,
+        SaveConfig = function()
+            return false
+        end,
+        LoadConfig = function()
+            return nil
+        end,
+        Destroy = function()
+        end,
+    }
 end
 
 function Library:Notify(options)
     self:_ensureGui()
-    self.Notifications:Notify(options)
+    if self.Notifications and type(self.Notifications.Notify) == "function" then
+        pcall(self.Notifications.Notify, self.Notifications, options)
+    end
 end
 
 function Library:SetTheme(overrides)
     self.Theme:Apply(overrides)
 
     for _, window in ipairs(self.Windows) do
-        window:RefreshTheme()
+        if window and type(window.RefreshTheme) == "function" then
+            pcall(window.RefreshTheme, window)
+        end
     end
 end
 
@@ -1874,7 +2018,24 @@ function Library:Decode(value)
     return HttpService:JSONDecode(value)
 end
 
-return function()
-    return Library.new()
+local function createLibrary()
+    local ok, libraryObject = pcall(Library.new)
+    if ok and type(libraryObject) == "table" then
+        return libraryObject
+    end
+
+    local fallback = {
+        Theme = Theme.new(),
+        Utility = Utility,
+        Config = Config.new("ProjectPulse"),
+        Keybinds = Keybinds.new(),
+        Windows = {},
+    }
+
+    setmetatable(fallback, {__index = Library})
+    return fallback
 end
+
+return createLibrary()
+
 
