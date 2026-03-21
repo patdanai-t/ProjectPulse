@@ -774,6 +774,22 @@ local function createIconButton(theme, parent, color, glyph)
     return button
 end
 
+local function normalizeIconSource(icon)
+    if type(icon) ~= "string" then
+        return false, icon
+    end
+
+    if string.match(icon, "^rbxassetid://") or string.match(icon, "^rbxthumb://") or string.match(icon, "^http") then
+        return true, icon
+    end
+
+    if string.match(icon, "^%d+$") then
+        return true, "rbxassetid://" .. icon
+    end
+
+    return false, icon
+end
+
 local function createTopbarNavButton(theme, parent, glyph)
     local button = Utility.Create("TextButton", {
         BackgroundColor3 = theme:Get("Surface"),
@@ -1282,11 +1298,19 @@ function Window:RefreshTheme()
     for _, tab in ipairs(self.Tabs) do
         if tab.Selected then
             tab.SidebarButton.BackgroundColor3 = theme:Get("AccentDark")
-            tab.IconLabel.TextColor3 = theme:Get("Text")
+                if tab.IsImageIcon then
+                    tab.IconLabel.ImageColor3 = theme:Get("Text")
+                else
+                    tab.IconLabel.TextColor3 = theme:Get("Text")
+                end
             tab.NameLabel.TextColor3 = theme:Get("Text")
         else
             tab.SidebarButton.BackgroundColor3 = theme:Get("SurfaceAlt")
-            tab.IconLabel.TextColor3 = theme:Get("Accent")
+                if tab.IsImageIcon then
+                    tab.IconLabel.ImageColor3 = theme:Get("Accent")
+                else
+                    tab.IconLabel.TextColor3 = theme:Get("Accent")
+                end
             tab.NameLabel.TextColor3 = theme:Get("TextMuted")
         end
     end
@@ -1434,17 +1458,33 @@ function Window:CreateTab(name, icon)
         },
     })
 
-    tab.IconLabel = Utility.Create("TextLabel", {
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        Position = UDim2.fromOffset(14, 0),
-        Size = UDim2.fromOffset(20, 42),
-        Text = tab.Icon,
-        TextColor3 = theme:Get("Accent"),
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = tab.SidebarButton,
-    })
+    local isImageIcon, iconSource = normalizeIconSource(tab.Icon)
+    tab.IsImageIcon = isImageIcon
+    tab.IconSource = iconSource
+
+    if isImageIcon then
+        tab.IconLabel = Utility.Create("ImageLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(14, 14),
+            Size = UDim2.fromOffset(14, 14),
+            Image = iconSource,
+            ImageColor3 = theme:Get("Accent"),
+            ScaleType = Enum.ScaleType.Fit,
+            Parent = tab.SidebarButton,
+        })
+    else
+        tab.IconLabel = Utility.Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Font = Enum.Font.GothamBold,
+            Position = UDim2.fromOffset(14, 0),
+            Size = UDim2.fromOffset(20, 42),
+            Text = tostring(tab.Icon),
+            TextColor3 = theme:Get("Accent"),
+            TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = tab.SidebarButton,
+        })
+    end
 
     tab.NameLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
@@ -1516,7 +1556,11 @@ function Window:CreateTab(name, icon)
         self.Page.Position = UDim2.fromOffset(-6, 14)
         self.Page.ScrollBarImageTransparency = 1
         self.SidebarButton.BackgroundColor3 = theme:Get("AccentDark")
-        self.IconLabel.TextColor3 = theme:Get("Text")
+        if self.IsImageIcon then
+            self.IconLabel.ImageColor3 = theme:Get("Text")
+        else
+            self.IconLabel.TextColor3 = theme:Get("Text")
+        end
         self.NameLabel.TextColor3 = theme:Get("Text")
         Utility.FastTween(self.Page, {
             Position = UDim2.fromOffset(16, 12),
