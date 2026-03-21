@@ -103,18 +103,18 @@ local Theme = {}
 Theme.__index = Theme
 
 local DEFAULT = {
-    Background = Color3.fromRGB(29, 29, 31),
-    Surface = Color3.fromRGB(35, 35, 37),
-    SurfaceAlt = Color3.fromRGB(42, 42, 45),
-    Sidebar = Color3.fromRGB(32, 32, 34),
-    Border = Color3.fromRGB(58, 58, 61),
-    Text = Color3.fromRGB(235, 235, 236),
-    TextMuted = Color3.fromRGB(156, 156, 160),
-    Accent = Color3.fromRGB(255, 32, 93),
-    AccentDark = Color3.fromRGB(185, 24, 72),
-    Success = Color3.fromRGB(80, 220, 160),
-    Warning = Color3.fromRGB(255, 191, 89),
-    Danger = Color3.fromRGB(255, 94, 94),
+    Background = Color3.fromRGB(14, 18, 26),
+    Surface = Color3.fromRGB(20, 26, 38),
+    SurfaceAlt = Color3.fromRGB(28, 36, 52),
+    Sidebar = Color3.fromRGB(16, 22, 32),
+    Border = Color3.fromRGB(54, 72, 102),
+    Text = Color3.fromRGB(226, 235, 248),
+    TextMuted = Color3.fromRGB(137, 156, 186),
+    Accent = Color3.fromRGB(58, 137, 255),
+    AccentDark = Color3.fromRGB(34, 92, 184),
+    Success = Color3.fromRGB(74, 201, 170),
+    Warning = Color3.fromRGB(255, 184, 77),
+    Danger = Color3.fromRGB(255, 107, 107),
     Shadow = Color3.fromRGB(0, 0, 0),
     Overlay = Color3.fromRGB(0, 0, 0),
 }
@@ -741,7 +741,7 @@ local function createIconButton(theme, parent, color, glyph)
         Font = Enum.Font.GothamBold,
         Size = UDim2.fromScale(1, 1),
         Text = glyph,
-        TextColor3 = Color3.fromRGB(35, 35, 35),
+        TextColor3 = Color3.fromRGB(18, 24, 34),
         TextSize = 9,
         TextTransparency = 0.35,
         Parent = button,
@@ -1709,7 +1709,7 @@ function Window:CreateTab(name, icon)
             local component = baseElement("Toggle", labelText, callback, defaultValue or false, tooltip)
             local pill = Utility.Create("TextButton", {
                 AutoButtonColor = false,
-                BackgroundColor3 = component.Value and theme:Get("Accent") or Color3.fromRGB(82, 82, 86),
+                BackgroundColor3 = component.Value and theme:Get("Accent") or Color3.fromRGB(46, 60, 86),
                 BorderSizePixel = 0,
                 Position = UDim2.new(1, -38, 0, 15),
                 Size = UDim2.fromOffset(30, 16),
@@ -1728,7 +1728,7 @@ function Window:CreateTab(name, icon)
 
             local function apply(state, silent)
                 component.Value = state
-                Utility.FastTween(pill, {BackgroundColor3 = state and theme:Get("Accent") or Color3.fromRGB(82, 82, 86)}, 0.18)
+                Utility.FastTween(pill, {BackgroundColor3 = state and theme:Get("Accent") or Color3.fromRGB(46, 60, 86)}, 0.18)
                 Utility.FastTween(knob, {Position = state and UDim2.fromOffset(18, 2) or UDim2.fromOffset(2, 2)}, 0.18)
                 if callback and not silent then
                     callback(state)
@@ -1781,7 +1781,7 @@ function Window:CreateTab(name, icon)
             })
 
             local track = Utility.Create("Frame", {
-                BackgroundColor3 = Color3.fromRGB(82, 82, 86),
+                BackgroundColor3 = Color3.fromRGB(46, 60, 86),
                 BorderSizePixel = 0,
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Position = UDim2.fromScale(0.5, 0.5),
@@ -1862,8 +1862,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -176, 0, 0),
-                Size = UDim2.fromOffset(176, 38),
+                Position = UDim2.new(1, -148, 0, 2),
+                Size = UDim2.fromOffset(148, 34),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
@@ -2032,8 +2032,8 @@ function Window:CreateTab(name, icon)
                 Font = Enum.Font.Gotham,
                 PlaceholderColor3 = theme:Get("TextMuted"),
                 PlaceholderText = placeholder or "Enter text",
-                Position = UDim2.new(1, -176, 0, 0),
-                Size = UDim2.fromOffset(176, 38),
+                Position = UDim2.new(1, -148, 0, 2),
+                Size = UDim2.fromOffset(148, 34),
                 Text = "",
                 TextColor3 = theme:Get("Text"),
                 TextSize = 10,
@@ -2079,8 +2079,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -96, 0, 0),
-                Size = UDim2.fromOffset(96, 38),
+                Position = UDim2.new(1, -84, 0, 2),
+                Size = UDim2.fromOffset(84, 34),
                 Text = component.Value.Name,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
@@ -2139,8 +2139,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = component.Value,
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -74, 0, 0),
-                Size = UDim2.fromOffset(74, 38),
+                Position = UDim2.new(1, -62, 0, 2),
+                Size = UDim2.fromOffset(62, 34),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
@@ -2154,8 +2154,8 @@ function Window:CreateTab(name, icon)
             local popup = Utility.Create("Frame", {
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -216, 1, 6),
-                Size = UDim2.fromOffset(216, 0),
+                Position = UDim2.new(1, -198, 1, 6),
+                Size = UDim2.fromOffset(198, 0),
                 Visible = false,
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 4),
@@ -2179,7 +2179,7 @@ function Window:CreateTab(name, icon)
                 BackgroundColor3 = Color3.fromHSV(hue, 1, 1),
                 BorderSizePixel = 0,
                 Image = "rbxassetid://4155801252",
-                Size = UDim2.fromOffset(210, 120),
+                Size = UDim2.fromOffset(178, 120),
                 Parent = popup,
                 CornerRadius = UDim.new(0, 8),
             })
@@ -2200,7 +2200,7 @@ function Window:CreateTab(name, icon)
             local hueBar = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.new(1, 1, 1),
                 BorderSizePixel = 0,
-                Size = UDim2.fromOffset(210, 12),
+                Size = UDim2.fromOffset(178, 12),
                 Parent = popup,
                 CornerRadius = UDim.new(1, 0),
                 Gradient = {
@@ -2242,7 +2242,7 @@ function Window:CreateTab(name, icon)
             local function setOpen(state)
                 open = state
                 popup.Visible = true
-                Utility.FastTween(popup, {Size = state and UDim2.fromOffset(216, 178) or UDim2.fromOffset(216, 0)}, 0.18)
+                Utility.FastTween(popup, {Size = state and UDim2.fromOffset(198, 178) or UDim2.fromOffset(198, 0)}, 0.18)
                 if not state then
                     compatDelay(0.19, function()
                         if not open then
