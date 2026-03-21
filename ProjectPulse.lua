@@ -1039,9 +1039,9 @@ function Window:_build()
     controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
-    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "×")
-    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "−")
-    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "+")
+    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "")
+    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "")
+    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "")
 
     self.TabButtonHolder = Utility.Create("ScrollingFrame", {
         Active = true,
@@ -1112,13 +1112,14 @@ function Window:_build()
     end)
 
     self.MinimizeButton.MouseButton1Click:Connect(function()
-        self:SetMinimized(not self.State.Minimized)
+        self.State.Closed = false
+        self:SetVisible(false)
     end)
     self.MaximizeButton.MouseButton1Click:Connect(function()
         self:SetMaximized(not self.State.Maximized)
     end)
     self.CloseButton.MouseButton1Click:Connect(function()
-        self:Close()
+        self:Destroy()
     end)
 
     self.WindowScale = Instance.new("UIScale")
