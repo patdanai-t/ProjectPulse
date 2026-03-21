@@ -123,16 +123,6 @@ local function normalizeImageSource(source)
     return trimmed
 end
 
-    if type(source) ~= "string" then
-        return ""
-    end
-
-    if source:match("^%d+$") then
-        return "rbxassetid://" .. source
-    end
-
-    return source
-end
 
 local Theme = (function()
 local Theme = {}
