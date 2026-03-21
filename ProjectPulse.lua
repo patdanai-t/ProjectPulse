@@ -956,7 +956,8 @@ function Window:_build()
 
     local titleGroup = Utility.Create("Frame", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -160, 1, 0),
+        Position = UDim2.fromOffset(14, 0),
+        Size = UDim2.new(1, -322, 1, 0),
         Parent = self.Topbar,
     })
 
@@ -984,6 +985,48 @@ function Window:_build()
         Parent = titleGroup,
     })
 
+    self.SearchShell = Utility.Create("Frame", {
+        AnchorPoint = Vector2.new(1, 0.5),
+        BackgroundColor3 = theme:Get("Surface"),
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, -92, 0.5, 0),
+        Size = UDim2.fromOffset(154, 24),
+        Parent = self.Topbar,
+        CornerRadius = UDim.new(0, 6),
+        Stroke = {
+            Color = theme:Get("Border"),
+            Transparency = 0.78,
+            Thickness = 1,
+        },
+    })
+
+    Utility.Create("TextLabel", {
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Position = UDim2.fromOffset(8, 0),
+        Size = UDim2.fromOffset(12, 24),
+        Text = "S",
+        TextColor3 = theme:Get("TextMuted"),
+        TextSize = 9,
+        Parent = self.SearchShell,
+    })
+
+    self.SearchBox = Utility.Create("TextBox", {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        ClearTextOnFocus = false,
+        Font = Enum.Font.Gotham,
+        PlaceholderColor3 = theme:Get("TextMuted"),
+        PlaceholderText = "Search",
+        Position = UDim2.fromOffset(24, 0),
+        Size = UDim2.new(1, -30, 1, 0),
+        Text = "",
+        TextColor3 = theme:Get("Text"),
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = self.SearchShell,
+    })
+
     local controls = Utility.Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
         BackgroundTransparency = 1,
@@ -1000,41 +1043,16 @@ function Window:_build()
     self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "−")
     self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "+")
 
-    self.SearchBox = Utility.Create("TextBox", {
-        BackgroundColor3 = theme:Get("SurfaceAlt"),
-        BorderSizePixel = 0,
-        ClearTextOnFocus = false,
-        Font = Enum.Font.Gotham,
-        PlaceholderColor3 = theme:Get("TextMuted"),
-        PlaceholderText = "Search controls...",
-        Position = UDim2.fromOffset(16, 12),
-        Size = UDim2.new(1, -28, 0, 38),
-        Text = "",
-        TextColor3 = theme:Get("Text"),
-        TextSize = 11,
-        Parent = self.Sidebar,
-        CornerRadius = UDim.new(0, 8),
-        Stroke = {
-            Color = theme:Get("Border"),
-            Transparency = 0.2,
-            Thickness = 1,
-        },
-        Padding = {
-            PaddingLeft = UDim.new(0, 12),
-            PaddingRight = UDim.new(0, 12),
-        },
-    })
-
     self.TabButtonHolder = Utility.Create("ScrollingFrame", {
         Active = true,
         AutomaticCanvasSize = Enum.AutomaticSize.None,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         CanvasSize = UDim2.fromOffset(0, 0),
-        Position = UDim2.fromOffset(10, 62),
+        Position = UDim2.fromOffset(10, 14),
         ScrollBarImageColor3 = theme:Get("Accent"),
         ScrollBarThickness = 3,
-        Size = UDim2.new(1, -20, 1, -124),
+        Size = UDim2.new(1, -20, 1, -76),
         Parent = self.Sidebar,
     })
     self.TabButtonLayout = Utility.NewListLayout(self.TabButtonHolder, 8)
@@ -2573,3 +2591,4 @@ local function createLibrary()
 end
 
 return createLibrary()
+
