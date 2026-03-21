@@ -1144,11 +1144,11 @@ function Window:RefreshTheme()
 
     for _, tab in ipairs(self.Tabs) do
         if tab.Selected then
-            tab.Button.BackgroundColor3 = theme:Get("AccentDark")
+            tab.SidebarButton.BackgroundColor3 = theme:Get("AccentDark")
             tab.IconLabel.TextColor3 = theme:Get("Text")
             tab.NameLabel.TextColor3 = theme:Get("Text")
         else
-            tab.Button.BackgroundColor3 = theme:Get("SurfaceAlt")
+            tab.SidebarButton.BackgroundColor3 = theme:Get("SurfaceAlt")
             tab.IconLabel.TextColor3 = theme:Get("Accent")
             tab.NameLabel.TextColor3 = theme:Get("TextMuted")
         end
@@ -1219,7 +1219,7 @@ function Window:CreateTab(name, icon)
         Selected = false,
     }
 
-    tab.Button = Utility.Create("TextButton", {
+    tab.SidebarButton = Utility.Create("TextButton", {
         AutoButtonColor = false,
         BackgroundColor3 = theme:Get("SurfaceAlt"),
         BorderSizePixel = 0,
@@ -1243,7 +1243,7 @@ function Window:CreateTab(name, icon)
         TextColor3 = theme:Get("Accent"),
         TextSize = 15,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = tab.Button,
+        Parent = tab.SidebarButton,
     })
 
     tab.NameLabel = Utility.Create("TextLabel", {
@@ -1255,10 +1255,10 @@ function Window:CreateTab(name, icon)
         TextColor3 = theme:Get("TextMuted"),
         TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = tab.Button,
+        Parent = tab.SidebarButton,
     })
 
-    Utility.Ripple(tab.Button, theme)
+    Utility.Ripple(tab.SidebarButton, theme)
 
     tab.Page = Utility.Create("ScrollingFrame", {
         Active = true,
@@ -1282,7 +1282,7 @@ function Window:CreateTab(name, icon)
             if other == self then
             else
                 other.Selected = false
-                other.Button.BackgroundColor3 = theme:Get("SurfaceAlt")
+                other.SidebarButton.BackgroundColor3 = theme:Get("SurfaceAlt")
                 other.IconLabel.TextColor3 = theme:Get("Accent")
                 other.NameLabel.TextColor3 = theme:Get("TextMuted")
 
@@ -1306,7 +1306,7 @@ function Window:CreateTab(name, icon)
         self.Page.Visible = true
         self.Page.Position = UDim2.fromOffset(-6, 14)
         self.Page.ScrollBarImageTransparency = 1
-        self.Button.BackgroundColor3 = theme:Get("AccentDark")
+        self.SidebarButton.BackgroundColor3 = theme:Get("AccentDark")
         self.IconLabel.TextColor3 = theme:Get("Text")
         self.NameLabel.TextColor3 = theme:Get("Text")
         Utility.FastTween(self.Page, {
@@ -2157,7 +2157,7 @@ function Window:CreateTab(name, icon)
         return self:_ensureSection():Paragraph(title or "Paragraph", text or "")
     end
 
-    tab.Button.MouseButton1Click:Connect(function()
+    tab.SidebarButton.MouseButton1Click:Connect(function()
         tab:Select()
     end)
 
@@ -2352,3 +2352,4 @@ local function createLibrary()
 end
 
 return createLibrary()
+
