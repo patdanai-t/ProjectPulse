@@ -107,6 +107,26 @@ local function normalizeImageSource(source)
         return ""
     end
 
+    local trimmed = source:match("^%s*(.-)%s*$") or source
+    if trimmed:match("^%d+$") then
+        return "rbxassetid://" .. trimmed
+    end
+
+    local assetId = trimmed:match("create%.roblox%.com/store/asset/(%d+)")
+        or trimmed:match("roblox%.com/library/(%d+)")
+        or trimmed:match("roblox%.com/catalog/(%d+)")
+
+    if assetId then
+        return "rbxassetid://" .. assetId
+    end
+
+    return trimmed
+end
+
+    if type(source) ~= "string" then
+        return ""
+    end
+
     if source:match("^%d+$") then
         return "rbxassetid://" .. source
     end
