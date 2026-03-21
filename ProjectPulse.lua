@@ -946,63 +946,21 @@ function Window:_build()
         },
     })
 
-    local controls = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(0, 0.5),
-        BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(16, 21),
-        Size = UDim2.fromOffset(52, 14),
-        Parent = self.Topbar,
-    })
-    local controlsLayout = Utility.NewListLayout(controls, 8)
-    controlsLayout.FillDirection = Enum.FillDirection.Horizontal
-    controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "")
-    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "")
-    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "")
-
-    Utility.Create("Frame", {
-        BackgroundColor3 = theme:Get("Border"),
-        BackgroundTransparency = 0.45,
-        BorderSizePixel = 0,
-        Position = UDim2.fromOffset(92, 0),
-        Size = UDim2.new(0, 1, 1, 0),
-        Parent = self.Topbar,
-    })
-
-    local navButtons = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(0, 0.5),
-        BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(106, 21),
-        Size = UDim2.fromOffset(70, 18),
-        Parent = self.Topbar,
-    })
-    local navLayout = Utility.NewListLayout(navButtons, 6)
-    navLayout.FillDirection = Enum.FillDirection.Horizontal
-    navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    navLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-    self.OverviewButton = createTopbarNavButton(theme, navButtons, "[]")
-    self.BackButton = createTopbarNavButton(theme, navButtons, "<")
-    self.ForwardButton = createTopbarNavButton(theme, navButtons, ">")
-
     local titleGroup = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
-        Position = UDim2.new(0.5, -6, 0.5, 0),
-        Size = UDim2.fromOffset(220, 28),
+        Position = UDim2.fromOffset(14, 0),
+        Size = UDim2.new(1, -170, 1, 0),
         Parent = self.Topbar,
     })
 
     self.TitleLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        Position = UDim2.fromOffset(0, -1),
-        Size = UDim2.new(1, 0, 0, 14),
+        Font = Enum.Font.GothamBlack,
+        Position = UDim2.fromOffset(0, -2),
+        Size = UDim2.new(1, 0, 0, 24),
         Text = self.Title,
         TextColor3 = theme:Get("Text"),
-        TextSize = 10,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
@@ -1010,55 +968,54 @@ function Window:_build()
     self.SubtitleLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.Gotham,
-        Position = UDim2.fromOffset(0, 11),
-        Size = UDim2.new(1, 0, 0, 12),
+        Position = UDim2.fromOffset(0, 22),
+        Size = UDim2.new(1, 0, 0, 16),
         Text = "Made by ProjectPulse Hub",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
 
-    self.SearchShell = Utility.Create("Frame", {
+    local controls = Utility.Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundColor3 = theme:Get("Surface"),
-        BorderSizePixel = 0,
-        Position = UDim2.new(1, -14, 0.5, 0),
-        Size = UDim2.fromOffset(148, 22),
-        Parent = self.Topbar,
-        CornerRadius = UDim.new(0, 6),
-        Stroke = {
-            Color = theme:Get("Border"),
-            Transparency = 0.8,
-            Thickness = 1,
-        },
-    })
-
-    Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        Position = UDim2.fromOffset(8, 0),
-        Size = UDim2.fromOffset(12, 22),
-        Text = "⌕",
-        TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
-        Parent = self.SearchShell,
+        Position = UDim2.new(1, -18, 0.5, 0),
+        Size = UDim2.fromOffset(64, 18),
+        Parent = self.Topbar,
     })
+    local controlsLayout = Utility.NewListLayout(controls, 6)
+    controlsLayout.FillDirection = Enum.FillDirection.Horizontal
+    controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "")
+    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "")
+    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "")
 
     self.SearchBox = Utility.Create("TextBox", {
-        BackgroundTransparency = 1,
+        BackgroundColor3 = theme:Get("SurfaceAlt"),
         BorderSizePixel = 0,
         ClearTextOnFocus = false,
         Font = Enum.Font.Gotham,
         PlaceholderColor3 = theme:Get("TextMuted"),
-        PlaceholderText = "Search",
-        Position = UDim2.fromOffset(24, 0),
-        Size = UDim2.new(1, -30, 1, 0),
+        PlaceholderText = "Search controls...",
+        Position = UDim2.fromOffset(16, 12),
+        Size = UDim2.new(1, -28, 0, 38),
         Text = "",
         TextColor3 = theme:Get("Text"),
-        TextSize = 10,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = self.SearchShell,
+        TextSize = 11,
+        Parent = self.Sidebar,
+        CornerRadius = UDim.new(0, 8),
+        Stroke = {
+            Color = theme:Get("Border"),
+            Transparency = 0.2,
+            Thickness = 1,
+        },
+        Padding = {
+            PaddingLeft = UDim.new(0, 12),
+            PaddingRight = UDim.new(0, 12),
+        },
     })
 
     self.TabButtonHolder = Utility.Create("ScrollingFrame", {
@@ -1067,10 +1024,10 @@ function Window:_build()
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         CanvasSize = UDim2.fromOffset(0, 0),
-        Position = UDim2.fromOffset(10, 14),
+        Position = UDim2.fromOffset(10, 62),
         ScrollBarImageColor3 = theme:Get("Accent"),
         ScrollBarThickness = 3,
-        Size = UDim2.new(1, -20, 1, -68),
+        Size = UDim2.new(1, -20, 1, -124),
         Parent = self.Sidebar,
     })
     self.TabButtonLayout = Utility.NewListLayout(self.TabButtonHolder, 8)
@@ -1138,17 +1095,6 @@ function Window:_build()
     end)
     self.CloseButton.MouseButton1Click:Connect(function()
         self:Destroy()
-    end)
-    self.OverviewButton.MouseButton1Click:Connect(function()
-        if self.CurrentTab then
-            self.CurrentTab:Select()
-        end
-    end)
-    self.BackButton.MouseButton1Click:Connect(function()
-        self:NavigateHistory(-1)
-    end)
-    self.ForwardButton.MouseButton1Click:Connect(function()
-        self:NavigateHistory(1)
     end)
 
     self.WindowScale = Instance.new("UIScale")
