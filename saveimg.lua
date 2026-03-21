@@ -98,6 +98,22 @@ local function findAncestorOfClass(instance, className)
 
     return nil
 end
+local function normalizeImageSource(source)
+    if type(source) == "number" then
+        return "rbxassetid://" .. tostring(source)
+    end
+
+    if type(source) ~= "string" then
+        return ""
+    end
+
+    if source:match("^%d+$") then
+        return "rbxassetid://" .. source
+    end
+
+    return source
+end
+
 local Theme = (function()
 local Theme = {}
 Theme.__index = Theme
@@ -612,7 +628,7 @@ function Notifications.new(library, screenGui)
         AnchorPoint = Vector2.new(1, 1),
         BackgroundTransparency = 1,
         Position = UDim2.new(1, -24, 1, -24),
-        Size = UDim2.fromOffset(340, 400),
+        Size = UDim2.fromOffset(280, 190),
         Parent = screenGui,
     })
 
@@ -631,7 +647,7 @@ function Notifications:Notify(options)
         BackgroundColor3 = theme:Get("Surface"),
         BackgroundTransparency = 0.04,
         BorderSizePixel = 0,
-        Size = UDim2.fromOffset(320, 0),
+        Size = UDim2.fromOffset(248, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = self.Container,
         CornerRadius = UDim.new(0, 4),
@@ -642,23 +658,22 @@ function Notifications:Notify(options)
             Thickness = 1,
         },
         Padding = {
-            PaddingBottom = UDim.new(0, 6),
-            PaddingLeft = UDim.new(0, 14),
-            PaddingRight = UDim.new(0, 14),
-            PaddingTop = UDim.new(0, 6),
+            PaddingBottom = UDim.new(0, 7),
+            PaddingLeft = UDim.new(0, 12),
+            PaddingRight = UDim.new(0, 12),
+            PaddingTop = UDim.new(0, 7),
         },
     })
 
-    Utility.Shadow(card, 0.55)
     Utility.NewListLayout(card, 6)
 
     Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 18),
+        Size = UDim2.new(1, 0, 0, 14),
         Font = Enum.Font.GothamBold,
         Text = options.Title or "ProjectPulse",
         TextColor3 = theme:Get("Text"),
-        TextSize = 11,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = card,
     })
@@ -679,22 +694,22 @@ function Notifications:Notify(options)
     local bar = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("Accent"),
         BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 3),
+        Size = UDim2.new(1, 0, 0, 2),
         Parent = card,
         CornerRadius = UDim.new(1, 0),
     })
 
-    card.Position = UDim2.fromOffset(80, 0)
+    card.Position = UDim2.fromOffset(52, 0)
     card.BackgroundTransparency = 1
-    Utility.FastTween(card, {Position = UDim2.fromOffset(0, 0), BackgroundTransparency = 0.04}, 0.26)
-    Utility.FastTween(bar, {Size = UDim2.new(0, 0, 0, 3)}, options.Duration or 3, Enum.EasingStyle.Linear)
+    Utility.FastTween(card, {Position = UDim2.fromOffset(0, 0), BackgroundTransparency = 0.04}, 0.22)
+    Utility.FastTween(bar, {Size = UDim2.new(0, 0, 0, 2)}, options.Duration or 3, Enum.EasingStyle.Linear)
 
     compatDelay(options.Duration or 3, function()
         if not card.Parent then
             return
         end
 
-        local tween = Utility.FastTween(card, {Position = UDim2.fromOffset(80, 0), BackgroundTransparency = 1}, 0.22)
+        local tween = Utility.FastTween(card, {Position = UDim2.fromOffset(52, 0), BackgroundTransparency = 1}, 0.18)
         tween.Completed:Connect(function()
             card:Destroy()
         end)
@@ -714,35 +729,6 @@ Window.__index = Window
 
 local function refreshCanvas(frame, layout, padding)
     frame.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + (padding or 0))
-end
-
-function section:CreateImage(labelText, imageUrl, size, tooltip)
-    local component = baseElement("Image", labelText, nil, imageUrl, tooltip)
-    local imgSize = size or UDim2.fromOffset(100, 100)
-
-    local imageLabel = Utility.Create("ImageLabel", {
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -imgSize.X.Offset, 0, 0),
-        Size = imgSize,
-        Image = imageUrl or "",
-        Parent = component.Frame,
-        CornerRadius = UDim.new(0, 6),
-    })
-
-    if tooltip then
-        Utility.Tooltip(imageLabel, tooltip, theme)
-    end
-
-    function component:GetSerialized()
-        return {Value = imageLabel.Image}
-    end
-
-    component.Set = function(value)
-        component.Value = value
-        imageLabel.Image = value or ""
-    end
-
-    return registerComponent(component)
 end
 
 local function createIconButton(theme, parent, color, glyph)
@@ -771,7 +757,7 @@ local function createIconButton(theme, parent, color, glyph)
         Size = UDim2.fromScale(1, 1),
         Text = glyph,
         TextColor3 = Color3.fromRGB(35, 35, 35),
-        TextSize = 9,
+        TextSize = 10,
         TextTransparency = 0.35,
         Parent = button,
     })
@@ -950,8 +936,8 @@ function Window:_build()
         Padding = {
             PaddingLeft = UDim.new(0, 12),
             PaddingRight = UDim.new(0, 12),
-            PaddingTop = UDim.new(0, 6),
-            PaddingBottom = UDim.new(0, 6),
+            PaddingTop = UDim.new(0, 7),
+            PaddingBottom = UDim.new(0, 7),
         },
     })
 
@@ -989,15 +975,19 @@ function Window:_build()
         Size = UDim2.new(1, -322, 1, 0),
         Parent = self.Topbar,
     })
+    local displayTitle = tostring(self.Title or "Project Pulse")
+    displayTitle = displayTitle:gsub("ProjectPulse", "Project Pulse")
+    displayTitle = displayTitle:gsub("%s+Test", "")
+
 
     self.TitleLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBlack,
-        Position = UDim2.fromOffset(0, -2),
-        Size = UDim2.new(1, 0, 0, 24),
-        Text = self.Title,
+        Position = UDim2.fromOffset(0, -4),
+        Size = UDim2.new(1, 0, 0, 34),
+        Text = displayTitle,
         TextColor3 = theme:Get("Text"),
-        TextSize = 11,
+        TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
@@ -1005,11 +995,11 @@ function Window:_build()
     self.SubtitleLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.Gotham,
-        Position = UDim2.fromOffset(0, 22),
-        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.fromOffset(0, 30),
+        Size = UDim2.new(1, 0, 0, 14),
         Text = "Made by ProjectPulse Hub",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 10,
+        TextSize = 9,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
@@ -1036,7 +1026,7 @@ function Window:_build()
         Size = UDim2.fromOffset(12, 24),
         Text = "S",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
+        TextSize = 10,
         Parent = self.SearchShell,
     })
 
@@ -1125,7 +1115,7 @@ function Window:_build()
         Size = UDim2.new(1, -18, 0, 16),
         Text = "RightShift",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 11,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.SidebarFooter,
     })
@@ -1365,11 +1355,6 @@ function Window:ApplyConfig(config)
     end
 end
 
-function tab:Image(labelText, imageUrl, size, tooltip)
-    return self:_ensureSection():CreateImage(labelText, imageUrl, size, tooltip)
-end
-
-
 function Window:SaveConfig(profile)
     return self.Library.Config:Save(profile, self:Serialize())
 end
@@ -1475,7 +1460,7 @@ function Window:CreateTab(name, icon)
         Size = UDim2.fromOffset(20, 42),
         Text = tab.Icon,
         TextColor3 = theme:Get("Accent"),
-        TextSize = 11,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = tab.SidebarButton,
     })
@@ -1487,7 +1472,7 @@ function Window:CreateTab(name, icon)
         Size = UDim2.new(1, -36, 1, 0),
         Text = name,
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 11,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = tab.SidebarButton,
     })
@@ -1591,7 +1576,7 @@ function Window:CreateTab(name, icon)
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1,
             Font = Enum.Font.GothamBold,
-            Size = UDim2.new(1, 0, 0, 18),
+        Size = UDim2.new(1, 0, 0, 14),
             Text = sectionName,
             TextColor3 = theme:Get("Text"),
             TextSize = 12,
@@ -1703,6 +1688,52 @@ function Window:CreateTab(name, icon)
 
         function section:CreateParagraph(title, text)
             return self:CreateLabel(title, text)
+        end
+
+        function section:CreateImage(title, imageSource, options)
+            options = options or {}
+            local component = baseElement("Image", title or "Image", nil, normalizeImageSource(imageSource), options.Description)
+            local imageHeight = options.Height or 120
+            local topOffset = component.DescriptionLabel.TextTransparency == 0 and 34 or 20
+            component.Frame.Size = UDim2.new(1, 0, 0, topOffset + imageHeight + 8)
+            component.Label.Size = UDim2.new(1, 0, 0, 16)
+
+            local image = Utility.Create("ImageLabel", {
+                BackgroundColor3 = theme:Get("Surface"),
+                BackgroundTransparency = 0.02,
+                BorderSizePixel = 0,
+                ClipsDescendants = true,
+                Image = component.Value,
+                Position = UDim2.fromOffset(0, topOffset),
+                ScaleType = options.ScaleType or Enum.ScaleType.Crop,
+                Size = UDim2.new(1, 0, 0, imageHeight),
+                Parent = component.Frame,
+                CornerRadius = UDim.new(0, 8),
+                Stroke = {
+                    Color = theme:Get("Border"),
+                    Transparency = 0.25,
+                    Thickness = 1,
+                },
+            })
+
+            if options.TileSize then
+                image.TileSize = options.TileSize
+            end
+
+            component.Set = function(value)
+                component.Value = normalizeImageSource(value)
+                image.Image = component.Value
+            end
+
+            function component:GetSerialized()
+                return {Value = self.Value}
+            end
+
+            return registerComponent(component)
+        end
+
+        function section:CreateBanner(...)
+            return self:CreateImage(...)
         end
 
         function section:CreateButton(labelText, callback, tooltip)
@@ -1896,8 +1927,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -220, 0, 0),
-                Size = UDim2.fromOffset(220, 38),
+                Position = UDim2.new(1, -148, 0, 2),
+                Size = UDim2.fromOffset(148, 34),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
@@ -1915,7 +1946,7 @@ function Window:CreateTab(name, icon)
                 Text = multi and "Select..." or tostring(component.Value),
                 TextColor3 = theme:Get("Text"),
                 TextSize = 10,
-                TextTruncate = Enum.TextTruncate.AtEnd,
+                TextWrapped = true,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = button,
             })
@@ -1958,6 +1989,7 @@ function Window:CreateTab(name, icon)
             Utility.NewListLayout(menuList, 4)
 
             local open = false
+            local closedHeight = 34
             local selected = multi and {} or component.Value
 
             local function syncLabel()
@@ -1978,8 +2010,10 @@ function Window:CreateTab(name, icon)
 
             local function toggle(state)
                 open = state
+                local menuHeight = math.min(#list * 30 + 8, 154)
+                component.Frame.Size = UDim2.new(1, 0, 0, state and (closedHeight + menuHeight + 8) or closedHeight)
                 menu.Visible = true
-                Utility.FastTween(menu, {Size = state and UDim2.new(1, 0, 0, math.min(#list * 30 + 8, 154)) or UDim2.new(1, 0, 0, 0)}, 0.16)
+                Utility.FastTween(menu, {Size = state and UDim2.new(1, 0, 0, menuHeight) or UDim2.new(1, 0, 0, 0)}, 0.16)
                 if not state then
                     compatDelay(0.17, function()
                         if not open then
@@ -1988,7 +2022,6 @@ function Window:CreateTab(name, icon)
                     end)
                 end
             end
-
             for _, value in ipairs(list) do
                 local option = Utility.Create("TextButton", {
                     AutoButtonColor = false,
@@ -2066,8 +2099,8 @@ function Window:CreateTab(name, icon)
                 Font = Enum.Font.Gotham,
                 PlaceholderColor3 = theme:Get("TextMuted"),
                 PlaceholderText = placeholder or "Enter text",
-                Position = UDim2.new(1, -220, 0, 0),
-                Size = UDim2.fromOffset(220, 38),
+                Position = UDim2.new(1, -148, 0, 2),
+                Size = UDim2.fromOffset(148, 34),
                 Text = "",
                 TextColor3 = theme:Get("Text"),
                 TextSize = 10,
@@ -2113,8 +2146,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -120, 0, 0),
-                Size = UDim2.fromOffset(120, 38),
+                Position = UDim2.new(1, -84, 0, 2),
+                Size = UDim2.fromOffset(84, 34),
                 Text = component.Value.Name,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
@@ -2173,8 +2206,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = component.Value,
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -58, 0, 0),
-                Size = UDim2.fromOffset(58, 38),
+                Position = UDim2.new(1, -62, 0, 2),
+                Size = UDim2.fromOffset(62, 34),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
@@ -2188,8 +2221,8 @@ function Window:CreateTab(name, icon)
             local popup = Utility.Create("Frame", {
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -230, 1, 6),
-                Size = UDim2.fromOffset(230, 0),
+                Position = UDim2.new(1, -198, 1, 6),
+                Size = UDim2.fromOffset(198, 0),
                 Visible = false,
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 4),
@@ -2200,8 +2233,8 @@ function Window:CreateTab(name, icon)
                 },
                 Padding = {
                     PaddingBottom = UDim.new(0, 10),
-                    PaddingLeft = UDim.new(0, 10),
-                    PaddingRight = UDim.new(0, 10),
+                    PaddingLeft = UDim.new(0, 12),
+                    PaddingRight = UDim.new(0, 12),
                     PaddingTop = UDim.new(0, 10),
                 },
             })
@@ -2213,7 +2246,7 @@ function Window:CreateTab(name, icon)
                 BackgroundColor3 = Color3.fromHSV(hue, 1, 1),
                 BorderSizePixel = 0,
                 Image = "rbxassetid://4155801252",
-                Size = UDim2.fromOffset(210, 120),
+                Size = UDim2.fromOffset(178, 120),
                 Parent = popup,
                 CornerRadius = UDim.new(0, 8),
             })
@@ -2234,7 +2267,7 @@ function Window:CreateTab(name, icon)
             local hueBar = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.new(1, 1, 1),
                 BorderSizePixel = 0,
-                Size = UDim2.fromOffset(210, 12),
+                Size = UDim2.fromOffset(178, 12),
                 Parent = popup,
                 CornerRadius = UDim.new(1, 0),
                 Gradient = {
@@ -2276,7 +2309,7 @@ function Window:CreateTab(name, icon)
             local function setOpen(state)
                 open = state
                 popup.Visible = true
-                Utility.FastTween(popup, {Size = state and UDim2.fromOffset(230, 178) or UDim2.fromOffset(230, 0)}, 0.18)
+                Utility.FastTween(popup, {Size = state and UDim2.fromOffset(198, 178) or UDim2.fromOffset(198, 0)}, 0.18)
                 if not state then
                     compatDelay(0.19, function()
                         if not open then
@@ -2345,6 +2378,14 @@ function Window:CreateTab(name, icon)
             return self:CreateParagraph(...)
         end
 
+        function section:Image(...)
+            return self:CreateImage(...)
+        end
+
+        function section:Banner(...)
+            return self:CreateBanner(...)
+        end
+
         function section:Button(...)
             return self:CreateButton(...)
         end
@@ -2399,6 +2440,14 @@ function Window:CreateTab(name, icon)
 
     function tab:Section(name)
         return self:CreateSection(name or "General")
+    end
+
+    function tab:Image(title, imageSource, options)
+        return self:_ensureSection():Image(title or "Image", imageSource or "", options)
+    end
+
+    function tab:Banner(title, imageSource, options)
+        return self:_ensureSection():Banner(title or "Banner", imageSource or "", options)
     end
 
     function tab:Button(labelText, callback, tooltip)
