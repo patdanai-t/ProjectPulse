@@ -973,7 +973,7 @@ function Window:_build()
     local titleGroup = Utility.Create("Frame", {
         BackgroundTransparency = 1,
         Position = UDim2.fromOffset(14, 0),
-        Size = UDim2.new(1, -322, 1, 0),
+        Size = UDim2.new(1, -420, 1, 0),
         Parent = self.Topbar,
     })
 
@@ -1006,12 +1006,12 @@ function Window:_build()
         BackgroundColor3 = theme:Get("Surface"),
         BorderSizePixel = 0,
         Position = UDim2.new(1, -92, 0.5, 0),
-        Size = UDim2.fromOffset(154, 24),
+        Size = UDim2.fromOffset(184, 24),
         Parent = self.Topbar,
         CornerRadius = UDim.new(0, 6),
         Stroke = {
             Color = theme:Get("Border"),
-            Transparency = 0.78,
+            Transparency = 0.7,
             Thickness = 1,
         },
     })
@@ -1043,6 +1043,21 @@ function Window:_build()
         Parent = self.SearchShell,
     })
 
+    local navHolder = Utility.Create("Frame", {
+        AnchorPoint = Vector2.new(1, 0.5),
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, -286, 0.5, 0),
+        Size = UDim2.fromOffset(48, 18),
+        Parent = self.Topbar,
+    })
+    local navLayout = Utility.NewListLayout(navHolder, 6)
+    navLayout.FillDirection = Enum.FillDirection.Horizontal
+    navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    navLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+    self.BackButton = createTopbarNavButton(theme, navHolder, "<")
+    self.ForwardButton = createTopbarNavButton(theme, navHolder, ">")
+
     local controls = Utility.Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
         BackgroundTransparency = 1,
@@ -1066,8 +1081,11 @@ function Window:_build()
         BorderSizePixel = 0,
         CanvasSize = UDim2.fromOffset(0, 0),
         Position = UDim2.fromOffset(10, 14),
-        ScrollBarImageColor3 = theme:Get("Accent"),
-        ScrollBarThickness = 3,
+        ScrollingDirection = Enum.ScrollingDirection.Y,
+        VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
+        ScrollBarImageColor3 = theme:Get("TextMuted"),
+        ScrollBarImageTransparency = 0.34,
+        ScrollBarThickness = 4,
         Size = UDim2.new(1, -20, 1, -76),
         Parent = self.Sidebar,
     })
@@ -1127,6 +1145,12 @@ function Window:_build()
         self:Filter(self.SearchBox.Text)
     end)
 
+    self.BackButton.MouseButton1Click:Connect(function()
+        self:NavigateHistory(-1)
+    end)
+    self.ForwardButton.MouseButton1Click:Connect(function()
+        self:NavigateHistory(1)
+    end)
     self.MinimizeButton.MouseButton1Click:Connect(function()
         self.State.Closed = false
         self:SetVisible(false)
@@ -1438,7 +1462,7 @@ function Window:CreateTab(name, icon)
     local tab = {
         Window = self,
         Name = name,
-        Icon = icon or "•",
+        Icon = icon or "�",
         Sections = {},
         Selected = false,
     }
@@ -1508,8 +1532,8 @@ function Window:CreateTab(name, icon)
         ScrollingDirection = Enum.ScrollingDirection.Y,
         VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
         ScrollBarImageColor3 = theme:Get("TextMuted"),
-        ScrollBarImageTransparency = 0.18,
-        ScrollBarThickness = 6,
+        ScrollBarImageTransparency = 0.22,
+        ScrollBarThickness = 5,
         Size = UDim2.new(1, -22, 1, -28),
         Position = UDim2.fromOffset(16, 12),
         Visible = false,
@@ -1720,6 +1744,117 @@ function Window:CreateTab(name, icon)
         end
 
 
+        function section:CreateCard(title, text, options)
+            options = options or {}
+            local id = string.format("%s_%s_%s", self.Name, sectionName, title or "Card"):gsub("%W", "_")
+            local buttonText = options.ButtonText
+            local tagText = options.Tag
+            local cardHeight = options.Height or (buttonText and 118 or 98)
+            local component = {
+                Id = id,
+                Kind = "Card",
+                Frame = Utility.Create("Frame", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, cardHeight),
+                    Parent = section.Frame,
+                }),
+                SearchText = string.format("%s %s %s", title or "Card", text or "", tagText or ""),
+                Value = false,
+                Set = function() end,
+            }
+
+            local card = Utility.Create("Frame", {
+                BackgroundColor3 = options.Color or theme:Get("Surface"),
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, 0, 1, -1),
+                Parent = component.Frame,
+                CornerRadius = UDim.new(0, 10),
+                Stroke = {
+                    Color = options.StrokeColor or theme:Get("Border"),
+                    Transparency = options.StrokeTransparency or 0.18,
+                    Thickness = 1,
+                },
+                Padding = {
+                    PaddingBottom = UDim.new(0, 12),
+                    PaddingLeft = UDim.new(0, 14),
+                    PaddingRight = UDim.new(0, 14),
+                    PaddingTop = UDim.new(0, 12),
+                },
+            })
+            Utility.NewListLayout(card, 6)
+
+            Utility.Create("Frame", {
+                BackgroundColor3 = options.AccentColor or theme:Get("Accent"),
+                BorderSizePixel = 0,
+                Size = UDim2.new(0, options.AccentWidth or 42, 0, 3),
+                Parent = card,
+                CornerRadius = UDim.new(1, 0),
+            })
+
+            Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Font = Enum.Font.GothamBold,
+                Size = UDim2.new(1, 0, 0, 18),
+                Text = title or "Card",
+                TextColor3 = theme:Get("Text"),
+                TextSize = 12,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = card,
+            })
+
+            Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Font = Enum.Font.Gotham,
+                Size = UDim2.new(1, 0, 0, buttonText and 34 or 44),
+                Text = text or "",
+                TextColor3 = theme:Get("TextMuted"),
+                TextSize = 10,
+                TextWrapped = true,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Parent = card,
+            })
+
+            if tagText and tagText ~= "" then
+                Utility.Create("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Font = Enum.Font.GothamBold,
+                    Size = UDim2.new(1, 0, 0, 14),
+                    Text = tagText,
+                    TextColor3 = options.TagColor or theme:Get("Accent"),
+                    TextSize = 9,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = card,
+                })
+            end
+
+            if buttonText then
+                local actionButton = Utility.Create("TextButton", {
+                    AutoButtonColor = false,
+                    BackgroundColor3 = options.ButtonColor or theme:Get("AccentDark"),
+                    BorderSizePixel = 0,
+                    Size = UDim2.fromOffset(options.ButtonWidth or 116, 28),
+                    Text = buttonText,
+                    Font = Enum.Font.GothamBold,
+                    TextColor3 = theme:Get("Text"),
+                    TextSize = 10,
+                    Parent = card,
+                    CornerRadius = UDim.new(0, 6),
+                })
+                Utility.Ripple(actionButton, theme)
+                actionButton.MouseButton1Click:Connect(function()
+                    if options.Callback then
+                        options.Callback()
+                    end
+                end)
+            end
+
+            function component:GetSerialized()
+                return {Value = false}
+            end
+
+            return registerComponent(component)
+        end
         function section:CreateImage(labelText, imageSource, options)
             options = options or {}
             local component = baseElement("Image", labelText or "Image", nil, imageSource, options.Description)
@@ -2495,6 +2630,10 @@ function Window:CreateTab(name, icon)
             return self:CreateParagraph(...)
         end
 
+        function section:Card(...)
+            return self:CreateCard(...)
+        end
+
         function section:Button(...)
             return self:CreateButton(...)
         end
@@ -2557,6 +2696,10 @@ function Window:CreateTab(name, icon)
 
     function tab:Section(name)
         return self:CreateSection(name or "General")
+    end
+
+    function tab:Card(title, text, options)
+        return self:_ensureSection():Card(title or "Card", text or "", options or {})
     end
 
     function tab:Button(labelText, callback, tooltip)
