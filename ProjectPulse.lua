@@ -639,33 +639,49 @@ local function refreshCanvas(frame, layout, padding)
     frame.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + (padding or 0))
 end
 
-local function createIconButton(theme, parent, text)
+local function createIconButton(theme, parent, color, glyph)
     local button = Utility.Create("TextButton", {
         AutoButtonColor = false,
-        BackgroundColor3 = theme:Get("SurfaceAlt"),
+        BackgroundColor3 = color,
         BorderSizePixel = 0,
-        Size = UDim2.fromOffset(28, 28),
+        Size = UDim2.fromOffset(14, 14),
         Text = "",
         Parent = parent,
         CornerRadius = UDim.new(1, 0),
         Stroke = {
-            Color = theme:Get("Border"),
-            Transparency = 0.25,
+            Color = color:Lerp(Color3.new(0, 0, 0), 0.35),
+            Transparency = 0.3,
             Thickness = 1,
         },
     })
 
-    Utility.Create("TextLabel", {
+    local icon = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
         Size = UDim2.fromScale(1, 1),
-        Text = text,
-        TextColor3 = theme:Get("TextMuted"),
-        TextSize = 12,
+        Text = glyph,
+        TextColor3 = Color3.fromRGB(35, 35, 35),
+        TextSize = 9,
+        TextTransparency = 0.35,
         Parent = button,
     })
 
-    Utility.Ripple(button, theme)
+    button.MouseEnter:Connect(function()
+        Utility.FastTween(button, {
+            Size = UDim2.fromOffset(16, 16),
+            BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), 0.12),
+        }, 0.14)
+        Utility.FastTween(icon, {TextTransparency = 0.05}, 0.14)
+    end)
+
+    button.MouseLeave:Connect(function()
+        Utility.FastTween(button, {
+            Size = UDim2.fromOffset(14, 14),
+            BackgroundColor3 = color,
+        }, 0.14)
+        Utility.FastTween(icon, {TextTransparency = 0.35}, 0.14)
+    end)
+
     return button
 end
 
@@ -684,6 +700,10 @@ function Window.new(library, title, options)
         Maximized = false,
         Blur = options.Blur ~= false,
     }
+
+    self.DefaultSize = UDim2.fromOffset(980, 640)
+    self.MinimizedSize = UDim2.fromOffset(980, 86)
+    self.MaximizedSize = UDim2.fromScale(0.92, 0.9)
 
     self:_build()
 
@@ -740,19 +760,32 @@ function Window:_build()
     Utility.Shadow(self.Main, 0.5)
 
     self.Topbar = Utility.Create("Frame", {
-        BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(12, 12),
-        Size = UDim2.new(1, -24, 0, 52),
+        BackgroundColor3 = theme:Get("SurfaceAlt"),
+        BackgroundTransparency = 0.16,
+        Position = UDim2.fromOffset(14, 14),
+        Size = UDim2.new(1, -28, 0, 58),
         Parent = self.Main,
+        CornerRadius = UDim.new(0, 14),
+        Stroke = {
+            Color = theme:Get("Border"),
+            Transparency = 0.28,
+            Thickness = 1,
+        },
+        Padding = {
+            PaddingLeft = UDim.new(0, 18),
+            PaddingRight = UDim.new(0, 18),
+            PaddingTop = UDim.new(0, 12),
+            PaddingBottom = UDim.new(0, 12),
+        },
     })
 
     self.Sidebar = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("Sidebar"),
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(14, 74),
-        Size = UDim2.new(0, 210, 1, -88),
+        Position = UDim2.fromOffset(14, 86),
+        Size = UDim2.new(0, 214, 1, -100),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 16),
+        CornerRadius = UDim.new(0, 18),
         Stroke = {
             Color = theme:Get("Border"),
             Transparency = 0.16,
@@ -763,10 +796,10 @@ function Window:_build()
     self.ContentShell = Utility.Create("Frame", {
         BackgroundColor3 = theme:Get("Surface"),
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 236, 0, 74),
-        Size = UDim2.new(1, -250, 1, -88),
+        Position = UDim2.new(0, 242, 0, 86),
+        Size = UDim2.new(1, -256, 1, -100),
         Parent = self.Main,
-        CornerRadius = UDim.new(0, 16),
+        CornerRadius = UDim.new(0, 18),
         Stroke = {
             Color = theme:Get("Border"),
             Transparency = 0.16,
@@ -774,44 +807,51 @@ function Window:_build()
         },
     })
 
-    Utility.Create("TextLabel", {
+    local titleGroup = Utility.Create("Frame", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, -94, 1, 0),
+        Parent = self.Topbar,
+    })
+
+    self.TitleLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBlack,
-        Position = UDim2.fromOffset(10, 0),
-        Size = UDim2.new(0.6, 0, 1, 0),
+        Position = UDim2.fromOffset(0, -2),
+        Size = UDim2.new(1, 0, 0, 24),
         Text = self.Title,
         TextColor3 = theme:Get("Text"),
         TextSize = 20,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = self.Topbar,
+        Parent = titleGroup,
     })
 
-    Utility.Create("TextLabel", {
+    self.SubtitleLabel = Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
         Font = Enum.Font.Gotham,
-        Position = UDim2.fromOffset(10, 24),
-        Size = UDim2.new(0.5, 0, 0, 20),
+        Position = UDim2.fromOffset(0, 22),
+        Size = UDim2.new(1, 0, 0, 16),
         Text = "Premium Roblox interface toolkit",
         TextColor3 = theme:Get("TextMuted"),
         TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = self.Topbar,
+        Parent = titleGroup,
     })
 
     local controls = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(1, 0),
+        AnchorPoint = Vector2.new(1, 0.5),
         BackgroundTransparency = 1,
-        Position = UDim2.new(1, 0, 0, 0),
-        Size = UDim2.fromOffset(118, 32),
+        Position = UDim2.new(1, -18, 0.5, 0),
+        Size = UDim2.fromOffset(64, 18),
         Parent = self.Topbar,
     })
-    local controlsLayout = Utility.NewListLayout(controls, 8)
+    local controlsLayout = Utility.NewListLayout(controls, 9)
     controlsLayout.FillDirection = Enum.FillDirection.Horizontal
     controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
-    self.MinimizeButton = createIconButton(theme, controls, "_")
-    self.MaximizeButton = createIconButton(theme, controls, "[]")
-    self.CloseButton = createIconButton(theme, controls, "X")
+    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "×")
+    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "−")
+    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "+")
 
     self.SearchBox = Utility.Create("TextBox", {
         BackgroundColor3 = theme:Get("SurfaceAlt"),
@@ -921,12 +961,12 @@ function Window:_build()
 end
 
 function Window:Open()
-    self.Root.Size = UDim2.fromOffset(920, 580)
+    self.Root.Size = UDim2.fromOffset(self.DefaultSize.X.Offset - 60, self.DefaultSize.Y.Offset - 60)
     self.Main.BackgroundTransparency = 1
     if self.BlurEffect then
         Utility.FastTween(self.BlurEffect, {Size = 16}, 0.3)
     end
-    Utility.FastTween(self.Root, {Size = UDim2.fromOffset(980, 640)}, 0.28)
+    Utility.FastTween(self.Root, {Size = self.DefaultSize}, 0.28)
     Utility.FastTween(self.Main, {BackgroundTransparency = 0}, 0.24)
 end
 
@@ -939,7 +979,7 @@ function Window:SetVisible(state)
     end
 
     local tween = Utility.FastTween(self.Main, {BackgroundTransparency = state and 0 or 1}, 0.2)
-    Utility.FastTween(self.Root, {Size = state and UDim2.fromOffset(980, 640) or UDim2.fromOffset(920, 580)}, 0.22)
+    Utility.FastTween(self.Root, {Size = state and (self.State.Maximized and self.MaximizedSize or self.DefaultSize) or UDim2.fromOffset(self.DefaultSize.X.Offset - 60, self.DefaultSize.Y.Offset - 60)}, 0.22)
 
     if not state then
         tween.Completed:Connect(function()
@@ -954,12 +994,28 @@ function Window:SetMinimized(state)
     self.State.Minimized = state
     self.Sidebar.Visible = not state
     self.ContentShell.Visible = not state
-    Utility.FastTween(self.Root, {Size = state and UDim2.fromOffset(980, 78) or UDim2.fromOffset(980, 640)}, 0.22)
+
+    if state then
+        self.State.Maximized = false
+    end
+
+    Utility.FastTween(self.Root, {
+        Size = state and self.MinimizedSize or (self.State.Maximized and self.MaximizedSize or self.DefaultSize),
+    }, 0.24)
 end
 
 function Window:SetMaximized(state)
     self.State.Maximized = state
-    Utility.FastTween(self.Root, {Size = state and UDim2.fromScale(0.88, 0.86) or UDim2.fromOffset(980, 640)}, 0.24)
+
+    if state and self.State.Minimized then
+        self.State.Minimized = false
+        self.Sidebar.Visible = true
+        self.ContentShell.Visible = true
+    end
+
+    Utility.FastTween(self.Root, {
+        Size = state and self.MaximizedSize or (self.State.Minimized and self.MinimizedSize or self.DefaultSize),
+    }, 0.26)
 end
 
 function Window:RefreshTheme()
@@ -2037,5 +2093,3 @@ local function createLibrary()
 end
 
 return createLibrary()
-
-
