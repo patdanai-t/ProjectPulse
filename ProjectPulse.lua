@@ -266,6 +266,19 @@ function Utility.IsInteractiveObject(object)
 end
 
 function Utility.HasInteractiveDescendantAt(root, point)
+    local screenGui = findAncestorOfClass(root, "ScreenGui")
+    if screenGui and type(screenGui.GetGuiObjectsAtPosition) == "function" then
+        local ok, objects = pcall(screenGui.GetGuiObjectsAtPosition, screenGui, point.X, point.Y)
+        if ok and objects then
+            for _, object in ipairs(objects) do
+                if Utility.IsInteractiveObject(object) then
+                    return true
+                end
+            end
+            return false
+        end
+    end
+
     for _, descendant in ipairs(root:GetDescendants()) do
         if Utility.IsInteractiveObject(descendant) and descendant.Visible and Utility.PointInBounds(point, descendant) then
             return true
@@ -281,10 +294,13 @@ function Utility.MakeDraggable(handle, root)
     local startPosition
     local dragConnection
     local endConnection
-    local activeTween
 
     handle.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+            return
+        end
+
+        if UserInputService:GetFocusedTextBox() then
             return
         end
 
@@ -301,7 +317,9 @@ function Utility.MakeDraggable(handle, root)
         changedConnection = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
-                changedConnection:Disconnect()
+                if changedConnection then
+                    changedConnection:Disconnect()
+                end
             end
         end)
     end)
@@ -312,18 +330,12 @@ function Utility.MakeDraggable(handle, root)
         end
 
         local delta = input.Position - dragStart
-        local goal = UDim2.new(
+        root.Position = UDim2.new(
             startPosition.X.Scale,
             startPosition.X.Offset + delta.X,
             startPosition.Y.Scale,
             startPosition.Y.Offset + delta.Y
         )
-
-        if activeTween and activeTween.Cancel then
-            activeTween:Cancel()
-        end
-
-        activeTween = Utility.FastTween(root, {Position = goal}, 0.08, Enum.EasingStyle.Quad)
     end)
 
     endConnection = UserInputService.InputEnded:Connect(function(input)
@@ -791,6 +803,7 @@ local function createTopbarNavButton(theme, parent, glyph)
         TextSize = 10,
         Parent = button,
     })
+    button.IconLabel = icon
 
     button.MouseEnter:Connect(function()
         Utility.FastTween(scale, {Scale = 1.08}, 0.12, Enum.EasingStyle.Quad)
@@ -832,11 +845,12 @@ function Window.new(library, title, options)
         BlurAfterClose = options.BlurAfterClose == true,
         Closed = false,
         ReopenWithoutBlur = false,
+        Destroyed = false,
     }
 
     self.DefaultSize = UDim2.fromOffset(816, 492)
     self.MinimizedSize = UDim2.fromOffset(816, 42)
-    self.MaximizedSize = UDim2.fromScale(0.78, 0.72)
+    self.MaximizedSize = UDim2.new(1, -28, 1, -28)
 
     self:_build()
 
@@ -952,9 +966,9 @@ function Window:_build()
     controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
-    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "×")
-    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "−")
-    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "+")
+    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "")
+    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "")
+    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "")
 
     local navButtons = Utility.Create("Frame", {
         AnchorPoint = Vector2.new(0, 0.5),
@@ -1114,13 +1128,20 @@ function Window:_build()
     end)
 
     self.MinimizeButton.MouseButton1Click:Connect(function()
-        self:SetMinimized(not self.State.Minimized)
+        self.State.Closed = false
+        self:SetVisible(false)
     end)
     self.MaximizeButton.MouseButton1Click:Connect(function()
         self:SetMaximized(not self.State.Maximized)
     end)
     self.CloseButton.MouseButton1Click:Connect(function()
-        self:Close()
+        self:Destroy()
+    end)
+    self.BackButton.MouseButton1Click:Connect(function()
+        self:NavigateHistory(-1)
+    end)
+    self.ForwardButton.MouseButton1Click:Connect(function()
+        self:NavigateHistory(1)
     end)
 
     self.WindowScale = Instance.new("UIScale")
@@ -1128,10 +1149,15 @@ function Window:_build()
     self.WindowScale.Parent = self.Main
 
     Utility.MakeDraggable(self.Main, self.Root)
+    self:UpdateNavigationButtons()
     self:Open()
 end
 
 function Window:Open()
+    if self.State.Destroyed or not self.Root then
+        return
+    end
+
     self.Root.Size = UDim2.fromOffset(self.DefaultSize.X.Offset - 70, self.DefaultSize.Y.Offset - 70)
     self.Main.BackgroundTransparency = 1
     self.Main.Position = UDim2.fromOffset(0, 10)
@@ -1149,6 +1175,10 @@ function Window:Open()
 end
 
 function Window:SetVisible(state)
+    if self.State.Destroyed or not self.Root then
+        return
+    end
+
     self.State.Hidden = not state
     self.Root.Visible = true
 
@@ -1206,6 +1236,10 @@ function Window:Close()
     self:SetVisible(false)
 end
 function Window:SetMinimized(state)
+    if self.State.Destroyed or not self.Root then
+        return
+    end
+
     self.State.Minimized = state
 
     if state then
@@ -1231,6 +1265,10 @@ function Window:SetMinimized(state)
 end
 
 function Window:SetMaximized(state)
+    if self.State.Destroyed or not self.Root then
+        return
+    end
+
     self.State.Maximized = state
 
     if state and self.State.Minimized then
@@ -1330,6 +1368,69 @@ function Window:LoadConfig(profile)
     return config
 end
 
+function Window:UpdateNavigationButtons()
+    if not self.BackButton or not self.ForwardButton then
+        return
+    end
+
+    local canGoBack = (self.HistoryIndex or 0) > 1
+    local canGoForward = (self.HistoryIndex or 0) < #(self.History or {})
+
+    self.BackButton.Active = canGoBack
+    self.ForwardButton.Active = canGoForward
+    self.BackButton.AutoButtonColor = false
+    self.ForwardButton.AutoButtonColor = false
+    self.BackButton.BackgroundTransparency = canGoBack and 0 or 0.28
+    self.ForwardButton.BackgroundTransparency = canGoForward and 0 or 0.28
+
+    if self.BackButton.IconLabel then
+        self.BackButton.IconLabel.TextTransparency = canGoBack and 0 or 0.55
+    end
+    if self.ForwardButton.IconLabel then
+        self.ForwardButton.IconLabel.TextTransparency = canGoForward and 0 or 0.55
+    end
+end
+
+function Window:_pushHistory(tab)
+    if self.SuppressHistory then
+        return
+    end
+
+    self.History = self.History or {}
+    self.HistoryIndex = self.HistoryIndex or 0
+
+    if self.History[self.HistoryIndex] == tab then
+        self:UpdateNavigationButtons()
+        return
+    end
+
+    for index = #self.History, self.HistoryIndex + 1, -1 do
+        self.History[index] = nil
+    end
+
+    table.insert(self.History, tab)
+    self.HistoryIndex = #self.History
+    self:UpdateNavigationButtons()
+end
+
+function Window:NavigateHistory(step)
+    self.History = self.History or {}
+    self.HistoryIndex = self.HistoryIndex or 0
+
+    local targetIndex = self.HistoryIndex + step
+    local targetTab = self.History[targetIndex]
+    if not targetTab then
+        self:UpdateNavigationButtons()
+        return
+    end
+
+    self.HistoryIndex = targetIndex
+    self.SuppressHistory = true
+    targetTab:Select()
+    self.SuppressHistory = false
+    self:UpdateNavigationButtons()
+end
+
 function Window:CreateTab(name, icon)
     local theme = self.Theme
     local tab = {
@@ -1399,6 +1500,11 @@ function Window:CreateTab(name, icon)
     end)
 
     function tab:Select()
+        if self.Window.CurrentTab == self then
+            self.Window:UpdateNavigationButtons()
+            return
+        end
+
         for _, other in ipairs(self.Window.Tabs) do
             if other == self then
             else
@@ -1424,6 +1530,7 @@ function Window:CreateTab(name, icon)
         end
 
         self.Selected = true
+        self.Window.CurrentTab = self
         self.Page.Visible = true
         self.Page.Position = UDim2.fromOffset(-6, 14)
         self.Page.ScrollBarImageTransparency = 1
@@ -1434,6 +1541,9 @@ function Window:CreateTab(name, icon)
             Position = UDim2.fromOffset(16, 12),
             ScrollBarImageTransparency = 0,
         }, 0.16, Enum.EasingStyle.Quad)
+
+        self.Window:_pushHistory(self)
+        self.Window:UpdateNavigationButtons()
     end
 
     function tab:CreateSection(sectionName)
@@ -2322,6 +2432,7 @@ end
 function Window:Destroy()
     self.State.Closed = true
     self.State.Hidden = true
+    self.State.Destroyed = true
     if self.BlurEffect then
         Utility.FastTween(self.BlurEffect, {Size = 0}, 0.2)
     end
@@ -2398,7 +2509,9 @@ function Library:_ensureGui()
     end
     self.Keybinds:BindLibraryToggle(Enum.KeyCode.RightShift, function()
         for _, window in ipairs(self.Windows) do
-            window:SetVisible(window.State.Hidden)
+            if window and window.Root and not window.State.Destroyed then
+                window:SetVisible(window.State.Hidden)
+            end
         end
     end)
 end
