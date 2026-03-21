@@ -1531,7 +1531,11 @@ function Window:CreateTab(name, icon)
             else
                 other.Selected = false
                 other.SidebarButton.BackgroundColor3 = theme:Get("SurfaceAlt")
-                other.IconLabel.TextColor3 = theme:Get("Accent")
+                if other.IsImageIcon then
+                    other.IconLabel.ImageColor3 = theme:Get("Accent")
+                else
+                    other.IconLabel.TextColor3 = theme:Get("Accent")
+                end
                 other.NameLabel.TextColor3 = theme:Get("TextMuted")
 
                 if other.Page.Visible then
