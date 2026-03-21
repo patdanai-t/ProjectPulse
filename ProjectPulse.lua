@@ -776,6 +776,9 @@ function Window.new(library, title, options)
         Minimized = false,
         Maximized = false,
         Blur = options.Blur ~= false,
+        BlurAfterClose = options.BlurAfterClose == true,
+        Closed = false,
+        ReopenWithoutBlur = false,
     }
 
     self.DefaultSize = UDim2.fromOffset(980, 640)
@@ -1030,7 +1033,7 @@ function Window:_build()
         self:SetMaximized(not self.State.Maximized)
     end)
     self.CloseButton.MouseButton1Click:Connect(function()
-        self:Destroy()
+        self:Close()
     end)
 
     self.WindowScale = Instance.new("UIScale")
@@ -1046,9 +1049,11 @@ function Window:Open()
     self.Main.BackgroundTransparency = 1
     self.Main.Position = UDim2.fromOffset(0, 10)
     self.WindowScale.Scale = 0.965
+    self.State.Hidden = false
 
+    local shouldBlur = self.State.Blur and not self.State.ReopenWithoutBlur
     if self.BlurEffect then
-        Utility.FastTween(self.BlurEffect, {Size = 16}, 0.3)
+        Utility.FastTween(self.BlurEffect, {Size = shouldBlur and 16 or 0}, 0.3)
     end
 
     Utility.FastTween(self.Root, {Size = self.DefaultSize}, 0.32)
@@ -1060,8 +1065,9 @@ function Window:SetVisible(state)
     self.State.Hidden = not state
     self.Root.Visible = true
 
+    local shouldBlur = state and self.State.Blur and not self.State.ReopenWithoutBlur
     if self.BlurEffect then
-        Utility.FastTween(self.BlurEffect, {Size = state and 16 or 0}, 0.24)
+        Utility.FastTween(self.BlurEffect, {Size = shouldBlur and 16 or 0}, 0.24)
     end
 
     local targetSize = self.State.Maximized and self.MaximizedSize or self.DefaultSize
@@ -1075,6 +1081,10 @@ function Window:SetVisible(state)
         Size = state and targetSize or UDim2.fromOffset(self.DefaultSize.X.Offset - 70, self.DefaultSize.Y.Offset - 70),
     }, 0.24)
 
+    if state then
+        self.State.Closed = false
+    end
+
     if not state then
         tween.Completed:Connect(function()
             if self.State.Hidden and self.Root then
@@ -1084,6 +1094,30 @@ function Window:SetVisible(state)
     end
 end
 
+function Window:SetBlur(enabled)
+    self.State.Blur = enabled == true
+
+    if not self.State.Blur then
+        self.State.ReopenWithoutBlur = true
+        if self.BlurEffect then
+            Utility.FastTween(self.BlurEffect, {Size = 0}, 0.2)
+        end
+    elseif not self.State.Hidden and not self.State.Closed and self.BlurEffect then
+        self.State.ReopenWithoutBlur = false
+        Utility.FastTween(self.BlurEffect, {Size = 16}, 0.2)
+    end
+end
+
+function Window:Close()
+    self.State.Closed = true
+    self.State.ReopenWithoutBlur = not self.State.BlurAfterClose
+
+    if self.BlurEffect then
+        Utility.FastTween(self.BlurEffect, {Size = 0}, 0.2)
+    end
+
+    self:SetVisible(false)
+end
 function Window:SetMinimized(state)
     self.State.Minimized = state
 
@@ -2174,11 +2208,14 @@ function Window:Tab(name, icon)
 end
 
 function Window:Destroy()
+    self.State.Closed = true
+    self.State.Hidden = true
     if self.BlurEffect then
         Utility.FastTween(self.BlurEffect, {Size = 0}, 0.2)
     end
     if self.Root then
         self.Root:Destroy()
+        self.Root = nil
     end
 end
 
@@ -2352,4 +2389,3 @@ local function createLibrary()
 end
 
 return createLibrary()
-
