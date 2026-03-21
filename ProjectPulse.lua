@@ -776,12 +776,18 @@ end
 
 local function createTopbarNavButton(theme, parent, glyph)
     local button = Utility.Create("TextButton", {
-        BackgroundTransparency = 1,
+        BackgroundColor3 = theme:Get("Surface"),
         AutoButtonColor = false,
         BorderSizePixel = 0,
         Size = UDim2.fromOffset(18, 18),
         Text = "",
         Parent = parent,
+        CornerRadius = UDim.new(0, 5),
+        Stroke = {
+            Color = theme:Get("Border"),
+            Transparency = 0.72,
+            Thickness = 1,
+        },
     })
 
     local scale = Instance.new("UIScale")
@@ -801,20 +807,22 @@ local function createTopbarNavButton(theme, parent, glyph)
 
     button.MouseEnter:Connect(function()
         Utility.FastTween(scale, {Scale = 1.08}, 0.12, Enum.EasingStyle.Quad)
+        Utility.FastTween(button, {BackgroundColor3 = theme:Get("SurfaceAlt")}, 0.12)
         Utility.FastTween(icon, {TextColor3 = theme:Get("Text")}, 0.12)
     end)
 
     button.MouseLeave:Connect(function()
         Utility.FastTween(scale, {Scale = 1}, 0.12, Enum.EasingStyle.Quad)
+        Utility.FastTween(button, {BackgroundColor3 = theme:Get("Surface")}, 0.12)
         Utility.FastTween(icon, {TextColor3 = theme:Get("TextMuted")}, 0.12)
     end)
 
     button.MouseButton1Down:Connect(function()
-        Utility.FastTween(scale, {Scale = 0.92}, 0.08, Enum.EasingStyle.Quad)
+        Utility.FastTween(scale, {Scale = 0.93}, 0.08, Enum.EasingStyle.Quad)
     end)
 
     button.MouseButton1Up:Connect(function()
-        Utility.FastTween(scale, {Scale = 1.03}, 0.08, Enum.EasingStyle.Quad)
+        Utility.FastTween(scale, {Scale = 1.04}, 0.08, Enum.EasingStyle.Quad)
     end)
 
     return button
@@ -842,7 +850,7 @@ function Window.new(library, title, options)
 
     self.DefaultSize = UDim2.fromOffset(816, 492)
     self.MinimizedSize = UDim2.fromOffset(816, 42)
-    self.MaximizedSize = UDim2.new(1, -28, 1, -28)
+    self.MaximizedSize = UDim2.fromScale(0.78, 0.72)
 
     self:_build()
 
@@ -948,8 +956,7 @@ function Window:_build()
 
     local titleGroup = Utility.Create("Frame", {
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(14, 0),
-        Size = UDim2.new(1, -228, 1, 0),
+        Size = UDim2.new(1, -160, 1, 0),
         Parent = self.Topbar,
     })
 
@@ -977,21 +984,6 @@ function Window:_build()
         Parent = titleGroup,
     })
 
-    local navButtons = Utility.Create("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -92, 0.5, 0),
-        Size = UDim2.fromOffset(40, 18),
-        Parent = self.Topbar,
-    })
-    local navLayout = Utility.NewListLayout(navButtons, 4)
-    navLayout.FillDirection = Enum.FillDirection.Horizontal
-    navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    navLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-    self.BackButton = createTopbarNavButton(theme, navButtons, "<")
-    self.ForwardButton = createTopbarNavButton(theme, navButtons, ">")
-
     local controls = Utility.Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
         BackgroundTransparency = 1,
@@ -1004,9 +996,9 @@ function Window:_build()
     controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
-    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "")
-    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "")
-    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "")
+    self.CloseButton = createIconButton(theme, controls, Color3.fromRGB(255, 95, 87), "×")
+    self.MinimizeButton = createIconButton(theme, controls, Color3.fromRGB(255, 189, 46), "−")
+    self.MaximizeButton = createIconButton(theme, controls, Color3.fromRGB(39, 201, 63), "+")
 
     self.SearchBox = Utility.Create("TextBox", {
         BackgroundColor3 = theme:Get("SurfaceAlt"),
@@ -1102,20 +1094,13 @@ function Window:_build()
     end)
 
     self.MinimizeButton.MouseButton1Click:Connect(function()
-        self.State.Closed = false
-        self:SetVisible(false)
+        self:SetMinimized(not self.State.Minimized)
     end)
     self.MaximizeButton.MouseButton1Click:Connect(function()
         self:SetMaximized(not self.State.Maximized)
     end)
     self.CloseButton.MouseButton1Click:Connect(function()
-        self:Destroy()
-    end)
-    self.BackButton.MouseButton1Click:Connect(function()
-        self:NavigateHistory(-1)
-    end)
-    self.ForwardButton.MouseButton1Click:Connect(function()
-        self:NavigateHistory(1)
+        self:Close()
     end)
 
     self.WindowScale = Instance.new("UIScale")
@@ -2588,4 +2573,3 @@ local function createLibrary()
 end
 
 return createLibrary()
-
