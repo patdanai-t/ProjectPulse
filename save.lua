@@ -421,7 +421,7 @@ function Utility.Tooltip(target, text, theme)
         Size = UDim2.fromOffset(0, 0),
         Text = "  " .. text .. "  ",
         TextColor3 = theme:Get("Text"),
-        TextSize = 9,
+        TextSize = 8,
         TextTransparency = 1,
         Visible = false,
         ZIndex = 200,
@@ -628,7 +628,7 @@ function Notifications.new(library, screenGui)
         AnchorPoint = Vector2.new(1, 1),
         BackgroundTransparency = 1,
         Position = UDim2.new(1, -24, 1, -24),
-        Size = UDim2.fromOffset(260, 220),
+        Size = UDim2.fromOffset(220, 160),
         Parent = screenGui,
     })
 
@@ -647,7 +647,7 @@ function Notifications:Notify(options)
         BackgroundColor3 = theme:Get("Surface"),
         BackgroundTransparency = 0.04,
         BorderSizePixel = 0,
-        Size = UDim2.fromOffset(236, 0),
+        Size = UDim2.fromOffset(200, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = self.Container,
         CornerRadius = UDim.new(0, 4),
@@ -665,16 +665,15 @@ function Notifications:Notify(options)
         },
     })
 
-    Utility.Shadow(card, 0.55)
     Utility.NewListLayout(card, 4)
 
     Utility.Create("TextLabel", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 16),
+        Size = UDim2.new(1, 0, 0, 14),
         Font = Enum.Font.GothamBold,
         Text = options.Title or "ProjectPulse",
         TextColor3 = theme:Get("Text"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = card,
     })
@@ -686,8 +685,8 @@ function Notifications:Notify(options)
         Font = Enum.Font.Gotham,
         Text = options.Content or "Notification",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
-        TextWrapped = true,
+        TextSize = 8,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = card,
     })
@@ -700,7 +699,7 @@ function Notifications:Notify(options)
         CornerRadius = UDim.new(1, 0),
     })
 
-    card.Position = UDim2.fromOffset(56, 0)
+    card.Position = UDim2.fromOffset(40, 0)
     card.BackgroundTransparency = 1
     Utility.FastTween(card, {Position = UDim2.fromOffset(0, 0), BackgroundTransparency = 0.04}, 0.26)
     Utility.FastTween(bar, {Size = UDim2.new(0, 0, 0, 2)}, options.Duration or 3, Enum.EasingStyle.Linear)
@@ -758,7 +757,7 @@ local function createIconButton(theme, parent, color, glyph)
         Size = UDim2.fromScale(1, 1),
         Text = glyph,
         TextColor3 = Color3.fromRGB(35, 35, 35),
-        TextSize = 9,
+        TextSize = 8,
         TextTransparency = 0.35,
         Parent = button,
     })
@@ -816,7 +815,7 @@ local function createTopbarNavButton(theme, parent, glyph)
         Size = UDim2.fromScale(1, 1),
         Text = glyph,
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
+        TextSize = 8,
         Parent = button,
     })
     button.IconLabel = icon
@@ -984,7 +983,7 @@ function Window:_build()
         Size = UDim2.new(1, 0, 0, 24),
         Text = self.Title,
         TextColor3 = theme:Get("Text"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
@@ -993,10 +992,10 @@ function Window:_build()
         BackgroundTransparency = 1,
         Font = Enum.Font.Gotham,
         Position = UDim2.fromOffset(0, 22),
-        Size = UDim2.new(1, 0, 0, 16),
+        Size = UDim2.new(1, 0, 0, 14),
         Text = "Made by ProjectPulse Hub",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
@@ -1023,7 +1022,7 @@ function Window:_build()
         Size = UDim2.fromOffset(12, 24),
         Text = "S",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
+        TextSize = 8,
         Parent = self.SearchShell,
     })
 
@@ -1038,7 +1037,7 @@ function Window:_build()
         Size = UDim2.new(1, -30, 1, 0),
         Text = "",
         TextColor3 = theme:Get("Text"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.SearchShell,
     })
@@ -1100,7 +1099,7 @@ function Window:_build()
         Size = UDim2.new(1, -18, 0, 16),
         Text = "Toggle Key",
         TextColor3 = theme:Get("Text"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.SidebarFooter,
     })
@@ -1112,7 +1111,7 @@ function Window:_build()
         Size = UDim2.new(1, -18, 0, 16),
         Text = "RightShift",
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.SidebarFooter,
     })
@@ -1457,7 +1456,7 @@ function Window:CreateTab(name, icon)
         Size = UDim2.fromOffset(20, 42),
         Text = tab.Icon,
         TextColor3 = theme:Get("Accent"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = tab.SidebarButton,
     })
@@ -1469,7 +1468,7 @@ function Window:CreateTab(name, icon)
         Size = UDim2.new(1, -36, 1, 0),
         Text = name,
         TextColor3 = theme:Get("TextMuted"),
-        TextSize = 9,
+        TextSize = 8,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = tab.SidebarButton,
     })
@@ -1573,7 +1572,7 @@ function Window:CreateTab(name, icon)
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1,
             Font = Enum.Font.GothamBold,
-            Size = UDim2.new(1, 0, 0, 16),
+            Size = UDim2.new(1, 0, 0, 14),
             Text = sectionName,
             TextColor3 = theme:Get("Text"),
             TextSize = 12,
@@ -1628,7 +1627,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(0.62, 0, 0, 14),
                 Text = description or "",
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 9,
+                TextSize = 8,
                 TextTransparency = hasDescription and 0 or 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = holder,
@@ -1669,8 +1668,8 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(1, 0, 0, 34),
                 Text = text,
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 9,
-                TextWrapped = true,
+                TextSize = 8,
+                TextTruncate = Enum.TextTruncate.AtEnd,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Top,
                 Parent = component.Frame,
@@ -1744,7 +1743,7 @@ function Window:CreateTab(name, icon)
                 Text = labelText,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 9,
+                TextSize = 8,
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 5),
             })
@@ -1827,7 +1826,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(52, 14),
                 Text = "(" .. Utility.FormatValue(component.Value) .. ")",
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 9,
+                TextSize = 8,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = component.Frame,
             })
@@ -1942,7 +1941,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.new(1, -36, 1, 0),
                 Text = multi and "Select..." or tostring(component.Value),
                 TextColor3 = theme:Get("Text"),
-                TextSize = 9,
+                TextSize = 8,
                 TextTruncate = Enum.TextTruncate.AtEnd,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = button,
@@ -1954,7 +1953,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(16, 38),
                 Text = "v",
                 TextColor3 = theme:Get("TextMuted"),
-                TextSize = 9,
+                TextSize = 8,
                 Parent = button,
             })
 
@@ -2028,7 +2027,7 @@ function Window:CreateTab(name, icon)
                     Text = value,
                     Font = Enum.Font.Gotham,
                     TextColor3 = theme:Get("Text"),
-                    TextSize = 9,
+                    TextSize = 8,
                     Parent = menuList,
                     CornerRadius = UDim.new(0, 8),
                 })
@@ -2100,7 +2099,7 @@ function Window:CreateTab(name, icon)
                 Size = UDim2.fromOffset(148, 34),
                 Text = "",
                 TextColor3 = theme:Get("Text"),
-                TextSize = 9,
+                TextSize = 8,
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
                 Stroke = {
@@ -2148,7 +2147,7 @@ function Window:CreateTab(name, icon)
                 Text = component.Value.Name,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
-                TextSize = 9,
+                TextSize = 8,
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
                 Stroke = {
