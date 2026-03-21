@@ -949,7 +949,7 @@ function Window:_build()
     local titleGroup = Utility.Create("Frame", {
         BackgroundTransparency = 1,
         Position = UDim2.fromOffset(14, 0),
-        Size = UDim2.new(1, -170, 1, 0),
+        Size = UDim2.new(1, -228, 1, 0),
         Parent = self.Topbar,
     })
 
@@ -976,6 +976,21 @@ function Window:_build()
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = titleGroup,
     })
+
+    local navButtons = Utility.Create("Frame", {
+        AnchorPoint = Vector2.new(1, 0.5),
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, -92, 0.5, 0),
+        Size = UDim2.fromOffset(40, 18),
+        Parent = self.Topbar,
+    })
+    local navLayout = Utility.NewListLayout(navButtons, 4)
+    navLayout.FillDirection = Enum.FillDirection.Horizontal
+    navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    navLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+    self.BackButton = createTopbarNavButton(theme, navButtons, "<")
+    self.ForwardButton = createTopbarNavButton(theme, navButtons, ">")
 
     local controls = Utility.Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
@@ -1095,6 +1110,12 @@ function Window:_build()
     end)
     self.CloseButton.MouseButton1Click:Connect(function()
         self:Destroy()
+    end)
+    self.BackButton.MouseButton1Click:Connect(function()
+        self:NavigateHistory(-1)
+    end)
+    self.ForwardButton.MouseButton1Click:Connect(function()
+        self:NavigateHistory(1)
     end)
 
     self.WindowScale = Instance.new("UIScale")
@@ -2567,3 +2588,4 @@ local function createLibrary()
 end
 
 return createLibrary()
+
