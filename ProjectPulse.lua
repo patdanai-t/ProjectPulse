@@ -1770,18 +1770,38 @@ function Window:CreateTab(name, icon)
                 Parent = component.Frame,
             })
 
+            local sliderHitbox = Utility.Create("TextButton", {
+                AutoButtonColor = false,
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                Position = UDim2.new(1, -158, 0, 9),
+                Size = UDim2.fromOffset(136, 24),
+                Text = "",
+                Parent = component.Frame,
+            })
+
             local track = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.fromRGB(82, 82, 86),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -150, 0, 18),
-                Size = UDim2.fromOffset(120, 3),
-                Parent = component.Frame,
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.fromScale(0.5, 0.5),
+                Size = UDim2.fromOffset(126, 5),
+                Parent = sliderHitbox,
                 CornerRadius = UDim.new(1, 0),
             })
             local fill = Utility.Create("Frame", {
                 BackgroundColor3 = theme:Get("Accent"),
                 BorderSizePixel = 0,
                 Size = UDim2.new((component.Value - min) / (max - min), 0, 1, 0),
+                Parent = track,
+                CornerRadius = UDim.new(1, 0),
+            })
+            local knob = Utility.Create("Frame", {
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                BorderSizePixel = 0,
+                Position = UDim2.new((component.Value - min) / (max - min), 0, 0.5, 0),
+                Size = UDim2.fromOffset(10, 10),
                 Parent = track,
                 CornerRadius = UDim.new(1, 0),
             })
@@ -1797,7 +1817,9 @@ function Window:CreateTab(name, icon)
                     value = math.floor(value + 0.5)
                 end
                 component.Value = value
-                fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                local alpha = (value - min) / (max - min)
+                fill.Size = UDim2.new(alpha, 0, 1, 0)
+                knob.Position = UDim2.new(alpha, 0, 0.5, 0)
                 valueLabel.Text = "(" .. Utility.FormatValue(value) .. ")"
                 if callback and not silent then
                     callback(value)
@@ -1808,7 +1830,7 @@ function Window:CreateTab(name, icon)
                 setFromRatio((value - min) / (max - min), silent)
             end
 
-            track.InputBegan:Connect(function(input)
+            sliderHitbox.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = true
                     setFromRatio((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X)
