@@ -1862,8 +1862,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -220, 0, 0),
-                Size = UDim2.fromOffset(220, 38),
+                Position = UDim2.new(1, -176, 0, 0),
+                Size = UDim2.fromOffset(176, 38),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
@@ -2032,8 +2032,8 @@ function Window:CreateTab(name, icon)
                 Font = Enum.Font.Gotham,
                 PlaceholderColor3 = theme:Get("TextMuted"),
                 PlaceholderText = placeholder or "Enter text",
-                Position = UDim2.new(1, -220, 0, 0),
-                Size = UDim2.fromOffset(220, 38),
+                Position = UDim2.new(1, -176, 0, 0),
+                Size = UDim2.fromOffset(176, 38),
                 Text = "",
                 TextColor3 = theme:Get("Text"),
                 TextSize = 10,
@@ -2079,8 +2079,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -120, 0, 0),
-                Size = UDim2.fromOffset(120, 38),
+                Position = UDim2.new(1, -96, 0, 0),
+                Size = UDim2.fromOffset(96, 38),
                 Text = component.Value.Name,
                 Font = Enum.Font.GothamBold,
                 TextColor3 = theme:Get("Text"),
@@ -2139,8 +2139,8 @@ function Window:CreateTab(name, icon)
                 AutoButtonColor = false,
                 BackgroundColor3 = component.Value,
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -58, 0, 0),
-                Size = UDim2.fromOffset(58, 38),
+                Position = UDim2.new(1, -74, 0, 0),
+                Size = UDim2.fromOffset(74, 38),
                 Text = "",
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 8),
@@ -2154,8 +2154,8 @@ function Window:CreateTab(name, icon)
             local popup = Utility.Create("Frame", {
                 BackgroundColor3 = theme:Get("Surface"),
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -230, 1, 6),
-                Size = UDim2.fromOffset(230, 0),
+                Position = UDim2.new(1, -216, 1, 6),
+                Size = UDim2.fromOffset(216, 0),
                 Visible = false,
                 Parent = component.Frame,
                 CornerRadius = UDim.new(0, 4),
@@ -2242,7 +2242,7 @@ function Window:CreateTab(name, icon)
             local function setOpen(state)
                 open = state
                 popup.Visible = true
-                Utility.FastTween(popup, {Size = state and UDim2.fromOffset(230, 178) or UDim2.fromOffset(230, 0)}, 0.18)
+                Utility.FastTween(popup, {Size = state and UDim2.fromOffset(216, 178) or UDim2.fromOffset(216, 0)}, 0.18)
                 if not state then
                     compatDelay(0.19, function()
                         if not open then
